@@ -1,25 +1,22 @@
-from multiprocessing import process
-from flask import Flask, jsonify
-from flask_cors import cross_origin
+from flask import Flask, session
+from datetime import timedelta
 settings = 'U0cuNk9QMVk3RE1SdWljbGhhcTRKeFRHQS5WeTg2ZjRXRkJVa28xRzVGT2lwLVkzSjNnMnV1LUdNZWVPT2xZSzY4S1JF'
-'pip3 install -r requirements.txt'
 from src.database.db import init_db
+from src.api import shopkeepers_api
 
-app = Flask(__name__, static_folder='./build', static_url_path='/')
+app = Flask(__name__, instance_relative_config=True,static_folder="static/dist",template_folder="static")
+app.config.from_mapping(
+    SECRET_KEY = 'DEV')
+import os
 
-@app.route('/api/hello', methods=['GET'])
-@cross_origin()
-def hello():
-    dict = {'message': 'Hellos', "status": "false"}
-    list = []
-    list.append(dict)
-    list.append(dict)
-    return jsonify(list)
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=10)
 
-def main():
+app.register_blueprint(shopkeepers_api.shopkeeper_bp)
+
+if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
-    app.listen(process.env.PORT or 5000, ...)
-
-main()
+    app.run(debug = True)
 
