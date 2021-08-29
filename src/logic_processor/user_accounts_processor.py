@@ -114,18 +114,16 @@ class UserAccountsProcessor:
         s = None
         if user_type == UserType.ShopKeeper:
             s = ShopKeepers.query.filter( ShopKeepers.user_name == user_name ).first()
-        # elif user_type == UserType.Customer:
-        #     s = Customers.query.filter(Customers.customer_name == user_name).first()
         else:
             return common.make_response_packet(1, "Not valid user type", None)
 
         if(s == None):
-            return common.make_response_packet(2,  "User Name Not Found", None)
+            return common.make_response_packet(1,  "User Name Not Found", None)
         if(not check_password_hash(s.password,password)):
-            return common.make_response_packet(3, "User Name or Password is Incorrect", None)
+            return common.make_response_packet(1, "User Name or Password is Incorrect", None)
         session[constants.is_authenticated] = True
         session[constants.user_type] = user_type
-        return  common.make_response_packet(0,"Login Successfully",s.toDict())
+        return common.make_response_packet(0, "Login Successfully", s.toDict())
 
     def process_logout(self):
         session[constants.is_authenticated] = None

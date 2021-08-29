@@ -4,6 +4,8 @@
     <list default="true" id="7d304cdb-354d-468a-9bd5-36f231b2e698" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app_start.py" beforeDir="false" afterPath="$PROJECT_DIR$/app_start.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/shopkeepers_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/shopkeepers_api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic_processor/user_accounts_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic_processor/user_accounts_processor.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
