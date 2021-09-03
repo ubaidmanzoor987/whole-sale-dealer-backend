@@ -1,11 +1,16 @@
 from flask_cors import CORS
+
+from src.logic_processor import common
+from src.logic_processor.common import token_required
 from src.logic_processor.user_accounts_processor import UAP
 import json
 from src.dto.UserType import UserType
 
 from flask import (
-    Blueprint, request
-)
+    Blueprint, request,
+    make_response)
+from src.database.db import Session
+Session.create_session()
 from src.models.ShopKeepers import ShopKeepers
 shopkeeper_bp = Blueprint('shopkeeper', __name__, url_prefix='/api/shopkeeper')
 CORS(shopkeeper_bp)
@@ -40,15 +45,14 @@ def list_shopkeeper():
 
 @shopkeeper_bp.route("/login",methods=['POST'])
 def login_shopkeeper():
-    user_name = request.json.get('user_name')
-    password = request.json.get('password')
-    return UAP.process_login(user_name,password,UserType.ShopKeeper)
+    return UAP.process_login(request.json)
 
 @shopkeeper_bp.route("/logout",methods=['POST'])
 def logout_shopkeeper():
-    return UAP.process_logout()
+    return UAP.process_logout(request.json)
 
 @shopkeeper_bp.route("/update_password",methods=['POST'])
+@token_required
 def update_password():
     return UAP.update_pass_shop(request.json)
 

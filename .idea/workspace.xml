@@ -2,10 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7d304cdb-354d-468a-9bd5-36f231b2e698" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Pipfile" beforeDir="false" afterPath="$PROJECT_DIR$/Pipfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Pipfile.lock" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/app_start.py" beforeDir="false" afterPath="$PROJECT_DIR$/app_start.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/api/shopkeepers_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/shopkeepers_api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic_processor/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic_processor/common.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/logic_processor/user_accounts_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic_processor/user_accounts_processor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/ShopKeepers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/ShopKeepers.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />

@@ -1,4 +1,6 @@
 venv
-.idea/
+.idea
 *\__pycache__
 *.xml
+.env
+Pipfile.lock

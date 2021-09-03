@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float
-from sqlalchemy.orm import relationship
-from src.database.db import Base
-class ShopKeepers(Base):
+from src.database.db import Session
+
+class ShopKeepers(Session.session.get_base()):
     __tablename__ = 'shopkeepers'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_name = Column(String(120), unique=True)
@@ -16,6 +16,7 @@ class ShopKeepers(Base):
     password = Column(String(120))
     image = Column(String(500))
     email = Column(String(120), unique=True)
+    jwt_token = Column(String(500))
     def __init__(self,
                  user_name = None,
                  shop_name=None,
@@ -28,7 +29,8 @@ class ShopKeepers(Base):
                  loc_lat=None,
                  address=None,
                  image=None,
-                 email = None):
+                 email = None,
+                 jwt_token=None):
         self.user_name = user_name
         self.shop_name = shop_name
         self.owner_name = owner_name
@@ -41,23 +43,24 @@ class ShopKeepers(Base):
         self.password = password
         self.image = image
         self.email = email
-        brands_rel = relationship("Brands")
-
+        self.jwt_token = jwt_token
     def __repr__(self):
         return '<User %r>' % (self.name)
 
     def toDict(self):
-        u = {"user_name" : self.user_name,
-        "shop_name" : self.shop_name,
-        "owner_name" : self.owner_name,
-        "owner_phone_no" : self.owner_phone_no,
-        "shop_phone_no1" : self.shop_phone_no1,
-        "shop_phone_no2" : self.shop_phone_no2,
-        "loc_long" : self.loc_long,
-        "loc_lat" : self.loc_lat,
-        "address" : self.address,
-        "image" : self.image,
-        "email" : self.email,
-        "shopkeeper_id":self.id
-             }
+        u = {
+            "user_name" : self.user_name,
+            "shop_name" : self.shop_name,
+            "owner_name" : self.owner_name,
+            "owner_phone_no" : self.owner_phone_no,
+            "shop_phone_no1" : self.shop_phone_no1,
+            "shop_phone_no2" : self.shop_phone_no2,
+            "loc_long" : self.loc_long,
+            "loc_lat" : self.loc_lat,
+            "address" : self.address,
+            "image" : self.image,
+            "email" : self.email,
+            "shopkeeper_id":self.id,
+             "token": self.jwt_token
+         }
         return u

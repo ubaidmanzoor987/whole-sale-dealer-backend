@@ -8,8 +8,11 @@ flask = "*"
 flask-cors = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
+requests = "*"
+pyjwt="*"
+python-dotenv="*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "*"
