@@ -20,13 +20,13 @@ class UserAccountsProcessor:
     ################################### Login Start ###########################################
     def process_login(self, req):
         if not 'user_name' in req:
-            return common.make_response_packet('User Name is required', None, 403)
+            return common.make_response_packet('User Name is required', None, 202)
 
         if not 'password' in req:
-            return common.make_response_packet('Password is required', None, 403)
+            return common.make_response_packet('Password is required', None, 202)
 
         if not 'user_type' in req:
-            return common.make_response_packet('User Type is required', None, 403)
+            return common.make_response_packet('User Type is required', None, 202)
 
         user_name = req['user_name']
         password = req['password']
@@ -36,13 +36,13 @@ class UserAccountsProcessor:
         if user_type == 'shop_keeper':
             s = ShopKeepers.query.filter( ShopKeepers.user_name == user_name ).first()
         else:
-            return common.make_response_packet("Not valid user type", None, 403)
+            return common.make_response_packet("Not valid user type", None, 400)
 
         if s is None:
-            return common.make_response_packet('Incorrect User Name', None, 403)
+            return common.make_response_packet('Incorrect User Name', None, 400)
 
         if(not check_password_hash(s.password, password)):
-            return common.make_response_packet("User Name or Password is Incorrect", None, 403)
+            return common.make_response_packet("User Name or Password is Incorrect", None, 201)
 
         env_variables = common.get_environ_variables()
         token = jwt.encode(
@@ -59,9 +59,9 @@ class UserAccountsProcessor:
     ################################### Logout Start ###########################################
     def process_logout(self, req):
         if not 'user_name' in req:
-            return common.make_response_packet('User Name is required', None, 403)
+            return common.make_response_packet('User Name is required', None, 201)
         if not 'user_type' in req:
-            return common.make_response_packet('User Type is required', None, 403)
+            return common.make_response_packet('User Type is required', None, 201)
 
         user_name = req['user_name']
         user_type = req['user_type']
