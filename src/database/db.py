@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-
-DATABASE_URI = 'postgresql+psycopg2://admin:admin123@localhost/whole_sale_management'
-# DATABASE_URI = 'postgresql+psycopg2://glaxiUser:webdir123R$@glaxi-db.c6cd13oyadwd.us-east-1.rds.amazonaws.com/wd-db'
+from dotenv import dotenv_values
+config = dotenv_values(".env")
+DATABASE_URI = config['DB_URI']
 
 class Session:
     session = None

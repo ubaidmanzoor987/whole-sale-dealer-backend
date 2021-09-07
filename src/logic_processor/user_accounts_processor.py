@@ -84,31 +84,42 @@ class UserAccountsProcessor:
     ################################### Logout End ###########################################
 
     ################################### Insert Shopkeeper Start ###########################################
-    def process_insert_shopkeeper(self,s):
-        if(not s.user_name or not s.owner_name or  not s.shop_name or not s.password ):
-            return common.make_response_packet("Data is not valid", None, 403)
+    def process_insert_shopkeeper(self,req):
+        if not 'user_name' in req:
+            return common.make_response_packet('User Name is required', None, 202)
 
-        is_user_exist = ShopKeepers.query.filter(ShopKeepers.user_name == s.user_name).first() != None
+        if not 'shop_name' in req:
+            return common.make_response_packet('ShopName is required', None, 202)
+
+        if not 'email' in req:
+            return common.make_response_packet('Email is required', None, 202)
+
+        if not 'password' in req:
+            return common.make_response_packet('Password is required', None, 202)
+
+        if not 'user_type' in req:
+            return common.make_response_packet('User Type is required', None, 202)
+
+        user_name = req['user_name']
+        shop_name = req['shop_name']
+        password = req['password']
+        email = req['email']
+        user_type = req['user_type']
+
+        is_user_exist = ShopKeepers.query.filter(ShopKeepers.user_name == user_name).first() != None
         if(is_user_exist):
-            return common.make_response_packet("User name already exists", None, 403)
+            return common.make_response_packet("User name already exists", None, 202)
 
-        is_ownerphone_no_exist = ShopKeepers.query.filter(ShopKeepers.owner_phone_no == s.owner_phone_no).first() != None
-        if (is_ownerphone_no_exist):
-            return common.make_response_packet("Phone number already Exists ", None, 403)
-
-        is_shop_name_exist = ShopKeepers.query.filter(ShopKeepers.shop_name == s.shop_name).first() != None
-        if (is_shop_name_exist):
-            return common.make_response_packet("Shop Name already Exists ", None, 403)
-
-        is_email_exist = ShopKeepers.query.filter(ShopKeepers.email == s.email).first() != None
+        is_email_exist = ShopKeepers.query.filter(ShopKeepers.email == email).first() != None
         if (is_email_exist):
-            return common.make_response_packet("Email Already Exists", None, 403)
-
-        s.password=generate_password_hash(s.password)
+            return common.make_response_packet("Email Already Exists", None, 202)
+        password = generate_password_hash(password)
+        s = ShopKeepers(user_name=user_name, shop_name=shop_name, password=password, user_type=user_type)
         db_session.add(s)
         db_session.commit()
         Session.session.destroy_session()
-        return common.make_response_packet("Shop keeper Inserted Successfully", s.toDict())
+
+        return common.make_response_packet("Shop keeper Inserted Successfully", None, 200)
 
     ###################################Insert Shopkeeper End ###########################################
 

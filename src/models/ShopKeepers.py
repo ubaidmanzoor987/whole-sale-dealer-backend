@@ -16,7 +16,9 @@ class ShopKeepers(Session.session.get_base()):
     password = Column(String(120))
     image = Column(String(500))
     email = Column(String(120), unique=True)
-    jwt_token = Column(String(500))
+    token = Column(String(500))
+    expo_push_token = Column(String(500))
+    user_type = Column(String(200))
     def __init__(self,
                  user_name = None,
                  shop_name=None,
@@ -30,7 +32,10 @@ class ShopKeepers(Session.session.get_base()):
                  address=None,
                  image=None,
                  email = None,
-                 jwt_token=None):
+                 token=None,
+                 expo_push_token = None,
+                 user_type = None,
+                 ):
         self.user_name = user_name
         self.shop_name = shop_name
         self.owner_name = owner_name
@@ -43,12 +48,15 @@ class ShopKeepers(Session.session.get_base()):
         self.password = password
         self.image = image
         self.email = email
-        self.jwt_token = jwt_token
+        self.token = token
+        self.expo_push_token = expo_push_token
+        self.user_type = user_type
     def __repr__(self):
         return '<User %r>' % (self.name)
 
     def toDict(self):
         u = {
+            "shopkeeper_id": self.id,
             "user_name" : self.user_name,
             "shop_name" : self.shop_name,
             "owner_name" : self.owner_name,
@@ -60,7 +68,8 @@ class ShopKeepers(Session.session.get_base()):
             "address" : self.address,
             "image" : self.image,
             "email" : self.email,
-            "shopkeeper_id":self.id,
-             "token": self.jwt_token
+            "token": self.token,
+            "expo_push_token": self.expo_push_token,
+            "user_type": self.user_type
          }
         return u

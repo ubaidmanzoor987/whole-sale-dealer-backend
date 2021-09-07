@@ -1,36 +1,19 @@
 from flask_cors import CORS
-
-from src.logic_processor import common
 from src.logic_processor.common import token_required
 from src.logic_processor.user_accounts_processor import UAP
 import json
-from src.dto.UserType import UserType
 
 from flask import (
-    Blueprint, request,
-    make_response)
+    Blueprint, request)
 from src.database.db import Session
 Session.create_session()
 from src.models.ShopKeepers import ShopKeepers
 shopkeeper_bp = Blueprint('shopkeeper', __name__, url_prefix='/api/shopkeeper')
 CORS(shopkeeper_bp)
 
-@shopkeeper_bp.route('/insert_shopkeeper',methods=['POST'])
+@shopkeeper_bp.route('/insert_shopkeeper', methods=['POST'])
 def insert_shop_keeper():
-    user_name = request.json.get('user_name')
-    shop_name = request.json.get('shop_name')
-    owner_name = request.json.get('owner_name')
-    owner_phone_no = request.json.get('owner_phone_no')
-    password = request.json.get('password')
-    address = request.json.get('address')
-    shop_phone_no1 = request.json.get('shop_phone_no1')
-    shop_phone_no2 = request.json.get('shop_phone_no2')
-    loc_long = request.json.get('loc_long')
-    loc_lat = request.json.get('loc_lat')
-    image = request.json.get('image')
-    email  = request.json.get('email')
-    s = ShopKeepers(user_name,shop_name,password,owner_name,owner_phone_no,shop_phone_no1,shop_phone_no2,loc_long,loc_lat,address,image,email)
-    res = UAP.process_insert_shopkeeper(s)
+    res = UAP.process_insert_shopkeeper(request.json)
     return res
 
 @shopkeeper_bp.route("/update_shopkeeper",methods=['POST'])
