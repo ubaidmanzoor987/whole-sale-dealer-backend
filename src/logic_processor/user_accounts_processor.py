@@ -48,7 +48,7 @@ class UserAccountsProcessor:
         token = jwt.encode(
             {'user_name': s.user_name, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=45)},
             env_variables['SECRET_KEY'], "HS256")
-        s.jwt_token = token
+        s.token = token
         db_session.add(s)
         db_session.commit()
         Session.session.destroy_session()
@@ -75,7 +75,7 @@ class UserAccountsProcessor:
         if s is None:
             return common.make_response_packet('Incorrect User Name', None, 403)
 
-        s.jwt_token = None
+        s.token = None
         db_session.add(s)
         db_session.commit()
         Session.session.destroy_session()
@@ -237,5 +237,46 @@ class UserAccountsProcessor:
             return common.make_response_packet(200, 'Incorrect Old Password', None)
 
     ################################### Update Shopkeeper Password End ###########################################
+
+    ################################### Foget Password start #####################################################
+    def forget_Password(self, s):
+        if(not 'email' in s):
+            return common.make_response_packet(200, "Email is required", None)
+        email = s['email']
+        is_email_exist = ShopKeepers.query.filter(ShopKeepers.email == email).first();
+        if is_email_exist:
+            return common.make_response_packet("User Founded", is_email_exist.toDict());
+        else:
+            return common.make_response_packet(200, "No User Found", None)
+    ################################### Foget Password End #####################################################
+    ################################### Reset Password start #####################################################
+    def reset_password(self, s):
+        if(not 'email' in s):
+            return common.make_response_packet(201,'Email is Required');
+        if(not 'password' in s):
+            return common.make_response_packet(201, 'Passowd is Required' );
+        if(not 'Confirm_password' in s):
+            return common.make_response_packet(201, 'Confrim password is Required');
+        if(s['passowrd'] != s['confirm_password']):
+            return common.make_response_packet(201, 'Password is not matched');
+
+        email = s['email'];
+        password = s['password'];
+
+        user = ShopKeepers.query.filter(ShopKeepers.email == email).first()
+
+        user.password = generate_password_hash(password);
+        db_session.add(user);
+        db_session.commit();
+
+        return common.make_response_packet(200, 'Password updated Successfully');
+
+
+
+
+    ################################### Reset Password End #####################################################
+
+
+
 
 UAP = UserAccountsProcessor()

@@ -12,5 +12,5 @@ app.register_blueprint(shopkeepers_api.shopkeeper_bp)
 
 if __name__ == "__main__":
     Session.session.init_db()
-    app.run("192.168.1.20", debug = True)
+    app.run(host='0.0.0.0', debug = True, port=5000)
 
