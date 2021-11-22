@@ -25,8 +25,8 @@ def is_customer():
             return True
     return False
 
-def make_response_packet(message='', data=None, status=200):
-    return make_response({'message': message, 'data': data}, status)
+def make_response_packet(message='', data=None, status=200, success=False, error=None):
+    return make_response({'message': message, 'data': data, 'success': success, 'error': error }, status)
 
 def is_number(num):
     try:
@@ -53,7 +53,7 @@ def token_required(f):
             return jsonify({'message': 'A valid token is missing'})
         try:
             from src.database.db import Session
-            from src.models.ShopKeepers import ShopKeepers
+            from src.models.User import ShopKeepers
             data = jwt.decode(token, config['SECRET_KEY'], algorithms=["HS256"])
         except Exception as ex:
             return jsonify({'message': str(ex)})
