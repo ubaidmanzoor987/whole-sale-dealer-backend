@@ -2,7 +2,6 @@ from flask_cors import CORS
 from src.logic_processor.common import token_required
 from src.logic_processor.user_accounts_processor import UAP
 import json
-
 from flask import (
     Blueprint, request)
 from src.database.db import Session
