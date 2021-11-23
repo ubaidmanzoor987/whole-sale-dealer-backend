@@ -47,6 +47,7 @@ def update_shop_picture():
 def get_shop_picture():
     return UAP.get_shopkeeper_picture(request.json)
 @shopkeeper_bp.route("/forgetPassword",methods=['POST'])
+
 def forgetPassword():
     return UAP.forget_Password(request.json)
 @shopkeeper_bp.route("/resetPassword",methods=['GET'])
