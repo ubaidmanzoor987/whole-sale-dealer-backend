@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float
 from src.database.db import Session
 
-class ShopKeepers(Session.session.get_base()):
-    __tablename__ = 'shopkeepers'
+class User(Session.session.get_base()):
+    __tablename__ = 'user'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_name = Column(String(120), unique=True)
     owner_name = Column(String(50), unique=False)
@@ -56,7 +56,7 @@ class ShopKeepers(Session.session.get_base()):
 
     def toDict(self):
         u = {
-            "shopkeeper_id": self.id,
+            "id": self.id,
             "user_name" : self.user_name,
             "shop_name" : self.shop_name,
             "owner_name" : self.owner_name,
