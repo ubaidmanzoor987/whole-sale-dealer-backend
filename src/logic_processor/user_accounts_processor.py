@@ -32,7 +32,7 @@ class UserAccountsProcessor:
 
             s = None
             if user_type == 'shop_keeper':
-                s = User.query.filter( User.user_name == user_name ).first()
+                s = db_session.query(User).filter( User.user_name == user_name ).first()
             else:
                 return common.make_response_packet('', None, 400, False, 'Not valid user type')
 
@@ -70,7 +70,7 @@ class UserAccountsProcessor:
 
             s = None
             if user_type == 'shop_keeper':
-                s = User.query.filter( User.user_name == user_name ).first()
+                s = db_session.query(User).filter( User.user_name == user_name ).first()
             else:
                 return common.make_response_packet("Not valid user type", None, 400, False, None)
 
@@ -111,11 +111,11 @@ class UserAccountsProcessor:
             email = req['email']
             user_type = req['user_type']
 
-            is_user_exist = User.query.filter(User.user_name == user_name).first() != None
+            is_user_exist = db_session.query(User).filter(User.user_name == user_name).first() != None
             if(is_user_exist):
                 return common.make_response_packet('', None, 400, False, 'User name already exists')
 
-            is_email_exist = User.query.filter(User.email == email).first() != None
+            is_email_exist = db_session.query(User).filter(User.email == email).first() != None
             if (is_email_exist):
                 return common.make_response_packet('', None, 400, False, 'Email Already Exists')
 
@@ -147,7 +147,7 @@ class UserAccountsProcessor:
                 updated |= common.check_and_update(shop,s,k.name)
 
             if(updated):
-                is_shop_name_exist = User.query.filter(and_(User.shop_name == shop.shop_name,User.id != shop.id)).first() != None
+                is_shop_name_exist = db_session.query(User).filter(and_(User.shop_name == shop.shop_name,User.id != shop.id)).first() != None
                 if (is_shop_name_exist):
                     return common.make_response_packet("", None, 400, False, 'Shop name already in use')
 
@@ -171,7 +171,7 @@ class UserAccountsProcessor:
         target = os.path.abspath("static/")
         if (not s['shopkeeper_id']):
             return common.make_response_packet(5, 'Shopkeeper id is required', None)
-        shop = User.query.filter(User.id == s['shopkeeper_id']).first()
+        shop = db_session.query(User).filter(User.id == s['shopkeeper_id']).first()
         if (not shop):
             return common.make_response_packet(6, 'shopkeeper_id is not valid', None)
         user_folder_create = os.path.join(target,shop.user_name)
@@ -201,7 +201,7 @@ class UserAccountsProcessor:
         target = os.path.abspath("static/")
         if (not s['shopkeeper_id']):
             return common.make_response_packet(5, 'Shopkeeper id is required', None)
-        shop = User.query.filter(User.id == s['shopkeeper_id']).first()
+        shop = db_session.query(User).filter(User.id == s['shopkeeper_id']).first()
         if (not shop):
             return common.make_response_packet(6, 'shopkeeper_id is not valid', None)
         if shop.image:
@@ -228,7 +228,7 @@ class UserAccountsProcessor:
         if (not 'user_name' in s):
             return common.make_response_packet('', None, 400, False, 'User Name is required')
 
-        shop = User.query.filter(User.user_name == s['user_name']).first()
+        shop = db_session.query(User).filter(User.user_name == s['user_name']).first()
         if (not shop):
             return common.make_response_packet('', None, 400, False, 'Invalid UserName')
 
@@ -255,7 +255,7 @@ class UserAccountsProcessor:
         if(not 'email' in s):
             return common.make_response_packet('', None, 400, False, 'Email is required')
         email = s['email']
-        user = User.query.filter(User.email == email).first();
+        user = db_session.query(User).filter(User.email == email).first();
         if user and user.user_name:
             return common.make_response_packet('User Found', user.toDict(), 200, False, None)
         else:
@@ -276,7 +276,7 @@ class UserAccountsProcessor:
         email = s['email'];
         password = s['password'];
 
-        user = User.query.filter(User.email == email).first()
+        user = db_session.query(User).filter(User.email == email).first()
 
         user.password = generate_password_hash(password);
         db_session.add(user);

@@ -32,7 +32,6 @@ class Session:
                                                       bind=self.engine))
         self.Base = declarative_base()
         self.Base.query = self.db_session.query_property()
-        from src.models import User
-
+        from src.models import User, Brands
         self.Base.metadata.create_all(bind=self.engine)
 
