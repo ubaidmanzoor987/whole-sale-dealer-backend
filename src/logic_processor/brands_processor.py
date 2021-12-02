@@ -51,10 +51,10 @@ class BrandsProductsProcessor:
                 for brands in brn:
                     brands_data.append({
                         'id': brands.id,
-                        'name': brands.brand_name,
+                        'brand_name': brands.brand_name,
                         'own_brand': brands.own_brand
                     })
-                return common.make_response_packet('success', json.dumps(brands_data), 200, True, '')
+                return common.make_response_packet('success', brands_data, 200, True, '')
             else:
                 return common.make_response_packet('No Data', [], 200, True, '')
         except Exception as ex:
@@ -68,7 +68,7 @@ class BrandsProductsProcessor:
 
     def update_brand(self, br):
         try:
-            if not 'id' in br:
+            if not 'brand_id' in br:
                 return common.make_response_packet("", None, 400, False, "brand id is required")
             if not 'user_id' in br:
                 return common.make_response_packet("", None, 400, False, "user id is required")
@@ -80,14 +80,7 @@ class BrandsProductsProcessor:
             elif is_user_exist and is_user_exist.user_type != 'shop_keeper':
                 return common.make_response_packet('', None, 400, False, 'You are not shopkeeper')
 
-            if 'brand_name' in br:
-                select_shop_keeper = db_session.query(Brands).filter(Brands.user_id == user_id).all()
-                if select_shop_keeper:
-                    for i in range(len(select_shop_keeper)):
-                        if br['brand_name'] == select_shop_keeper[i].brand_name:
-                            return common.make_response_packet('', None, 400, False, 'Brand Name already exists')
-
-            brn = db_session.query(Brands).filter(Brands.id == br['id'] and Brands.user_id == user_id).first()
+            brn = db_session.query(Brands).filter(Brands.id == br['brand_id'] and Brands.user_id == user_id).first()
             if (not brn):
                 return common.make_response_packet('', None, 400, False, 'invalid brand id')
             keys = brn.__table__.columns
@@ -110,12 +103,12 @@ class BrandsProductsProcessor:
 
     def delete_brand(self, br):
         try:
-            if not 'id' in br:
+            if not 'brand_id' in br:
                 return common.make_response_packet("", None, 400, False, "brand id is required")
             if not 'user_id' in br:
                 return common.make_response_packet("", None, 400, False, "user id is required")
 
-            brn = db_session.query(Brands).filter(Brands.id == br['id'] and Brands.user_id == br['user_id']).first()
+            brn = db_session.query(Brands).filter(Brands.id == br['brand_id'] and Brands.user_id == br['user_id']).first()
             if (not brn):
                 return common.make_response_packet("", None, 400, False, "brand id or user_id invalid")
 
