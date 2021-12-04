@@ -6,7 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="7d304cdb-354d-468a-9bd5-36f231b2e698" name="Default Changelist" comment="forget routes added">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< Updated upstream
       <change beforePath="$PROJECT_DIR$/src/api/shopkeepers_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/shopkeepers_api.py" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/src/logic_processor/user_accounts_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic_processor/user_accounts_processor.py" afterDir="false" />
+>>>>>>> Stashed changes
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,9 +112,12 @@
       </map>
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
+<<<<<<< Updated upstream
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="forget routes added" />
     <option name="LAST_COMMIT_MESSAGE" value="forget routes added" />
+=======
+>>>>>>> Stashed changes
   </component>
 </project>
