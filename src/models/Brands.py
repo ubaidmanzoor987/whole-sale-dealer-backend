@@ -20,5 +20,5 @@ class Brands(Session.session.get_base()):
         self.user_id=user_id
 
     def toDict(self):
-        u = {"brand_id":self.id,"name":self.brand_name, "own_brand":self.own_brand}
+        u = {"brand_id":self.id,"brand_name":self.brand_name, "own_brand":self.own_brand}
         return u

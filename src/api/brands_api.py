@@ -7,7 +7,7 @@ from src.logic_processor.brands_processor import BPP
 brands_bp = Blueprint('brands', __name__, url_prefix='/api/brands/shopkeeper')
 CORS(brands_bp)
 
-@brands_bp.route('/insert_brands',methods=['POST'])
+@brands_bp.route('/insert_brand',methods=['POST'])
 def insert_brands():
     res = BPP.process_insert_brands(request.json)
     return res
