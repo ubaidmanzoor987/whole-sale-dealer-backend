@@ -4,7 +4,7 @@ from flask import (
 )
 from src.logic_processor.brands_processor import BPP
 
-brands_bp = Blueprint('brands', __name__, url_prefix='/api/brands/shopkeeper')
+brands_bp = Blueprint('brands', __name__, url_prefix='/api/brands')
 CORS(brands_bp)
 
 @brands_bp.route('/insert_brand',methods=['POST'])

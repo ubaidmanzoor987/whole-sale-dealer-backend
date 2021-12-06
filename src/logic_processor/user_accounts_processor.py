@@ -120,7 +120,7 @@ class UserAccountsProcessor:
                 return common.make_response_packet('', None, 400, False, 'Email Already Exists')
 
             password = generate_password_hash(password)
-            s = User(user_name=user_name, shop_name=shop_name, password=password, user_type=user_type)
+            s = User(user_name=user_name, shop_name=shop_name, password=password, user_type=user_type, email=email)
             db_session.add(s)
             db_session.commit()
             Session.session.destroy_session()
