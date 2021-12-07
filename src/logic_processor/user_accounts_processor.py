@@ -7,10 +7,12 @@ Session.create_session()
 db_session = Session.session.get_session()
 engine = Session.session.get_engine()
 from src.models.User import User
-from sqlalchemy import and_
 from src.logic_processor import common
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+from PIL import Image
+from io import BytesIO
+from base64 import b64decode
 
 class UserAccountsProcessor:
 
@@ -132,36 +134,58 @@ class UserAccountsProcessor:
     ###################################Insert Shopkeeper End ###########################################
 
     ################################### Update Shopkeeper Start ###########################################
-    def update_shopkeeper(self,s):
+
+    def update_user(self, req):
         try:
-            if (not s['user_name']):
-                return common.make_response_packet('', None, 400, False, 'User Name is required')
-            shop = User.query.filter(User.user_name== s['user_name']).first()
+            if not 'user_id' in req:
+                return common.make_response_packet('', None, 400, False, 'User Id is required')
 
-            if (not shop):
-                return common.make_response_packet('', None, 400, False, 'Invalid User Name')
+            if not 'shop_name' in req:
+                return common.make_response_packet('', None, 400, False, 'ShopName is required')
 
-            keys = shop.__table__.columns
-            updated =False
+            if not 'email' in req:
+                return common.make_response_packet('', None, 400, False, 'Email is required')
+
+            user_id = req['user_id']
+            image = req['image'] if 'image' in req else ''
+            user = db_session.query(User).filter(User.id == user_id).first()
+            if not user:
+                return common.make_response_packet('', None, 400, False, 'Invalid user id')
+            if image != '':
+                target = os.path.abspath("static/")
+                user_folder_create = os.path.join(target, user.user_name)
+                if not os.path.isdir(user_folder_create):
+                    os.mkdir(user_folder_create)
+                user_profile_direc = os.path.join(user_folder_create, "profile_pic")
+                if not os.path.isdir(user_profile_direc):
+                    os.mkdir(user_profile_direc)
+                f = req['image']
+                im = Image.open(BytesIO(b64decode(f.split(',')[1])))
+                filename = uuid.uuid1().hex
+                destination = "\\".join([user_profile_direc, filename])
+                im.save(destination + ".png")
+                req['image'] = filename
+
+            keys = User.__table__.columns
+            updated = False
             for k in keys:
-                updated |= common.check_and_update(shop,s,k.name)
+                updated |= common.check_and_update(user, req, k.name)
 
-            if(updated):
-                is_shop_name_exist = db_session.query(User).filter(and_(User.shop_name == shop.shop_name,User.id != shop.id)).first() != None
-                if (is_shop_name_exist):
-                    return common.make_response_packet("", None, 400, False, 'Shop name already in use')
-
+            if (updated):
                 db_session.commit()
-                Session.session.destroy_session()
-                return common.make_response_packet("Updated successfully", shop.toDict(), 200, True, None)
-
+                return common.make_response_packet('User successfully updated', user.toDict(), 200, True, '')
             else:
-                return common.make_response_packet('Already Uptodate', shop.toDict(), 200, True, None)
-
+                return common.make_response_packet('Nothing Updated', user.toDict(), 200, True, '')
         except Exception as ex:
-            print("Excprption in update_user", ex)
+            print("Exception in update_user", ex)
             return common.make_response_packet('', None, 400, False, 'Server Error')
-    ################################### Update Shopkeeper End ###########################################
+        Session.session.destroy_session()
+
+    def convert_and_save(self, b64_string, file_name):
+        with open("file_name.png", "wb") as fh:
+            fh.write(base64.decodebytes(b64_string.encode()))
+
+################################### Update Shopkeeper End ###########################################
 
     ################################### Update Shopkeeper Picture Start ###########################################
     def update_shopkeeper_picture(self,s):
