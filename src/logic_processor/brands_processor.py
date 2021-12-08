@@ -8,7 +8,7 @@ from src.models.Brands import Brands
 from src.models.User import User
 from src.logic_processor import common
 
-class BrandsProductsProcessor:
+class BrandsProcessor:
     def process_insert_brands(self, req):
         try:
             if not 'brand_name' in req:
@@ -130,4 +130,4 @@ class BrandsProductsProcessor:
         Session.session.destroy_session()
 
 ###############################################################################
-BPP = BrandsProductsProcessor()
+BPP = BrandsProcessor()

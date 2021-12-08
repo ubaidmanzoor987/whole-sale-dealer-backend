@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-
 from src.database.db import Session
 class Brands(Session.session.get_base()):
     __tablename__ = 'brands'
