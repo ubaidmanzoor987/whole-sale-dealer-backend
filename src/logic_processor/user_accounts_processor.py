@@ -131,8 +131,8 @@ class UserAccountsProcessor:
 
     ###################################Insert Shopkeeper End ###########################################
 
-    ################################### Update Shopkeeper Start ###########################################
-    def update_shopkeeper(self,s):
+    ################################### Update User Start ###########################################
+    def update_user(self,s):
         try:
             if (not s['user_name']):
                 return common.make_response_packet('', None, 400, False, 'User Name is required')
@@ -161,7 +161,7 @@ class UserAccountsProcessor:
         except Exception as ex:
             print("Excprption in update_user", ex)
             return common.make_response_packet('', None, 400, False, 'Server Error')
-    ################################### Update Shopkeeper End ###########################################
+    ################################### Update User End ###########################################
 
     ################################### Update Shopkeeper Picture Start ###########################################
     def update_shopkeeper_picture(self,s):
