@@ -126,13 +126,20 @@ class ProductsProcessor:
             is_user_exist = db_session.query(User).filter(User.id == user_id).first()
             if not is_user_exist:
                 return common.make_response_packet('', None, 400, False, 'Invalid user id')
-            elif is_user_exist.user_type != "shop_keeper":
-                return common.make_response_packet('', None, 400, False, 'Not a shopkeeper')
-            products = db_session.query(Products).filter(Products.shopkeeper_id == user_id).all()
-            products_data = []
-            for p in products:
-                products_data.append(p.toDict())
-            return common.make_response_packet('success', products_data, 200, True, '')
+            #elif is_user_exist.user_type != "shop_keeper":
+            #    return common.make_response_packet('', None, 400, False, 'Not a shopkeeper')
+            product_data = []
+            if(is_user_exist.user_type == 'shop_keeper'):
+                products = db_session.query(Products).filter(Products.user_id == user_id).all();
+                for p in products:
+                    product_data.append(p.toDict())
+            else:
+                relevant_user = json.loads(is_user_exist.relevant_id);
+                for user in relevant_user:
+                    products = db_session.query(Products).filter(Products.user_id == user).all();
+                    for p in products:
+                        product_data.append(p.toDict());
+            return common.make_response_packet('success', product_data, 200, True, '')
 
         except Exception as ex:
             print("Exception in get_products", ex)
