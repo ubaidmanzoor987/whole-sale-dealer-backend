@@ -42,9 +42,16 @@ class BrandsProcessor:
 
     def get_brands(self, req):
         try:
+            if not req:
+                return common.make_response_packet('', None, 400, False, 'user_id is required, invalid data')
             if not 'user_id' in req:
-                return common.make_response_packet('', None, 400, False, 'User is required')
+                return common.make_response_packet('', None, 400, False, 'user_id is required')
             user_id = req['user_id']
+            is_user_exist = db_session.query(User).filter(User.id == user_id).first()
+            if not is_user_exist:
+                return common.make_response_packet('', None, 400, False, 'invalid user id')
+            elif is_user_exist and is_user_exist.user_type != 'shop_keeper':
+                return common.make_response_packet('', None, 400, False, 'you are not shopkeeper')
             brn = db_session.query(Brands).filter(Brands.user_id == user_id).all()
             brands_data = []
             if brn:
