@@ -8,6 +8,13 @@ from src.models.Products import Products
 from src.models.User import User
 from src.models.Brands import Brands
 from src.logic_processor import common
+import os
+from PIL import Image
+from io import BytesIO
+from base64 import b64decode
+import base64
+import datetime
+import uuid
 
 class ProductsProcessor:
     def process_insert_product(self, req):
@@ -42,6 +49,52 @@ class ProductsProcessor:
                 return common.make_response_packet('', None, 400, False, 'Invalid user id')
             elif is_user_exist and is_user_exist.user_type !='shop_keeper':
                 return common.make_response_packet('', None, 400, False, 'You are not shopkeeper')
+
+            #Save Image
+            if image1 != '':
+                target = os.path.abspath("static/")
+                user_folder_create = os.path.join(target, is_user_exist.user_name)
+                if not os.path.isdir(user_folder_create):
+                    os.mkdir(user_folder_create)
+                user_product_direc = os.path.join(user_folder_create, "product_pic")
+                if not os.path.isdir(user_product_direc):
+                    os.mkdir(user_product_direc)
+                f = image1
+                im = Image.open(BytesIO(b64decode(f.split(',')[1])))
+                filename = uuid.uuid1().hex
+                destination = "\\".join([user_product_direc, filename])
+                im.save(destination + ".png")
+                image1 = filename
+
+            if image2 != '':
+                target = os.path.abspath("static/")
+                user_folder_create = os.path.join(target, is_user_exist.user_name)
+                if not os.path.isdir(user_folder_create):
+                    os.mkdir(user_folder_create)
+                user_product_direc = os.path.join(user_folder_create, "product_pic")
+                if not os.path.isdir(user_product_direc):
+                    os.mkdir(user_product_direc)
+                f = image2
+                im = Image.open(BytesIO(b64decode(f.split(',')[1])))
+                filename = uuid.uuid1().hex
+                destination = "\\".join([user_product_direc, filename])
+                im.save(destination + ".png")
+                image2 = filename
+
+            if image3 != '':
+                target = os.path.abspath("static/")
+                user_folder_create = os.path.join(target, is_user_exist.user_name)
+                if not os.path.isdir(user_folder_create):
+                    os.mkdir(user_folder_create)
+                user_product_direc = os.path.join(user_folder_create, "product_pic")
+                if not os.path.isdir(user_product_direc):
+                    os.mkdir(user_product_direc)
+                f = image3
+                im = Image.open(BytesIO(b64decode(f.split(',')[1])))
+                filename = uuid.uuid1().hex
+                destination = "\\".join([user_product_direc, filename])
+                im.save(destination + ".png")
+                image3 = filename
 
             p = Products(
                 product_name=product_name,

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, JSON
 from src.database.db import Session
 
 class User(Session.session.get_base()):
@@ -16,6 +16,7 @@ class User(Session.session.get_base()):
     password = Column(String(120))
     image = Column(String(500))
     email = Column(String(120), unique=True)
+    relevant_id = Column(JSON)
     token = Column(String(500))
     expo_push_token = Column(String(500))
     user_type = Column(String(200))
@@ -35,7 +36,9 @@ class User(Session.session.get_base()):
                  token=None,
                  expo_push_token = None,
                  user_type = None,
+                 relevant_id=None
                  ):
+        self.relevant_id = relevant_id
         self.user_name = user_name
         self.shop_name = shop_name
         self.owner_name = owner_name
@@ -70,6 +73,7 @@ class User(Session.session.get_base()):
             "email" : self.email,
             "token": self.token,
             "expo_push_token": self.expo_push_token,
-            "user_type": self.user_type
+            "user_type": self.user_type,
+            "relevant_id": self.relevant_id
          }
         return u

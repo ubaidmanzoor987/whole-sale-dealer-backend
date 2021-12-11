@@ -1,5 +1,6 @@
 import base64
 import datetime
+import json
 import uuid
 import jwt
 from src.database.db import Session
@@ -154,10 +155,14 @@ class UserAccountsProcessor:
                 return common.make_response_packet('', None, 400, False, 'Invalid user id')
             if image != '':
                 target = os.path.abspath("static/")
+                print(target)
                 user_folder_create = os.path.join(target, user.user_name)
+                print(os.path.isdir(user_folder_create))
+
                 if not os.path.isdir(user_folder_create):
                     os.mkdir(user_folder_create)
                 user_profile_direc = os.path.join(user_folder_create, "profile_pic")
+                print(os.path.isdir(user_profile_direc))
                 if not os.path.isdir(user_profile_direc):
                     os.mkdir(user_profile_direc)
                 f = req['image']
@@ -180,9 +185,7 @@ class UserAccountsProcessor:
         except Exception as ex:
             print("Exception in update_user", ex)
             return common.make_response_packet('', None, 400, False, 'Server Error')
-<<<<<<< HEAD
-    ################################### Update User End ###########################################
-=======
+
         Session.session.destroy_session()
 
     def convert_and_save(self, b64_string, file_name):
@@ -190,7 +193,7 @@ class UserAccountsProcessor:
             fh.write(base64.decodebytes(b64_string.encode()))
 
 ################################### Update Shopkeeper End ###########################################
->>>>>>> c2ac42fc18b8f685bd50ec7784cce8d529c0f425
+
 
     ################################### Update Shopkeeper Picture Start ###########################################
     def update_shopkeeper_picture(self,s):
@@ -313,5 +316,116 @@ class UserAccountsProcessor:
         return common.make_response_packet('Password updated Successfully', user.toDict(), 200, False, None)
 
     ################################### Reset Password End #####################################################
+    ################################### Add Customer and Shoperkeeper #####################################################
+
+
+    ################################### Add Customer and Shoperkeeper Relevant ID #####################################################
+
+    def add_user_shopkeeper(self, req):
+        if(not req):
+            return common.make_response_packet('', None, 400, False, 'User_id, relevant_id is required')
+        if (not 'user_id' in req):
+            return common.make_response_packet('', None, 400, False, 'User ID is required')
+        if(not 'relevant_id' in req):
+            return common.make_response_packet('', None, 400, False, 'Relevant ID is required')
+        relevant_user = db_session.query(User).filter(User.id == req['relevant_id']).first()
+        if(not relevant_user):
+            return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
+        user = db_session.query(User).filter(User.id == req['user_id']).first()
+        if(not user):
+            return common.make_response_packet('', None, 400, False, 'User not found')
+        if(relevant_user.user_type == 'shop_keeper' and user.user_type == 'shop_keeper'):
+            return common.make_response_packet('', None, 400, False, 'shop_keeper cannot added other shop_keeper')
+        elif(relevant_user.user_type == 'customer' and user.user_type == 'customer'):
+            return common.make_response_packet('', None, 400, False, 'customer cannot added other customer')
+        all_relevant_user = user.relevant_id
+        other_relevant_user = relevant_user.relevant_id
+
+        if(other_relevant_user is None):
+            other_relevant_user = json.dumps([]);
+        if(all_relevant_user is None):
+            all_relevant_user = json.dumps([])
+
+        print(all_relevant_user)
+        all_relevant_user = json.loads(all_relevant_user)
+        other_relevant_user = json.loads(other_relevant_user)
+
+        for user_id in all_relevant_user:
+            if (user_id == req['relevant_id']):
+                return common.make_response_packet('', None, 400, False, 'Relevant ID already exists')
+        all_relevant_user.append(req['relevant_id'])
+        other_relevant_user.append(req['user_id'])
+        all_relevant_user = json.dumps(all_relevant_user)
+        other_relevant_user = json.dumps(other_relevant_user)
+
+
+        user.relevant_id = all_relevant_user
+        relevant_user.relevant_id = other_relevant_user
+        db_session.add(user);
+        db_session.add(relevant_user);
+        db_session.commit();
+
+        user = db_session.query(User).filter(User.id == req['user_id']).first()
+        return common.make_response_packet('Relevant ID successully added', user.toDict(), 200, False, None)
+    ################################### Add Customer and Shoperkeeper Relevant ID End #####################################################
+    ################################### Remove Customer and Shoperkeeper Relevant ID Start #####################################################
+
+    def remove_user_shopkeeper(self, req):
+        if(not req):
+            return common.make_response_packet('', None, 400, False, 'User_id, relevant_id is required')
+        if (not 'user_id' in req):
+            return common.make_response_packet('', None, 400, False, 'User ID is required')
+        if(not 'relevant_id' in req):
+            return common.make_response_packet('', None, 400, False, 'Relevant ID is required')
+        relevant_user = db_session.query(User).filter(User.id == req['relevant_id']).first()
+        if(not relevant_user):
+            return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
+        user = db_session.query(User).filter(User.id == req['user_id']).first()
+        if(not user):
+            return common.make_response_packet('', None, 400, False, 'User not found')
+        all_relevant_user = json.loads(user.relevant_id)
+        other_relevant_user = json.loads(relevant_user.relevant_id)
+        found = False
+        new_id = []
+        new_other_id = []
+        for user_id in all_relevant_user:
+            if(user_id == req['relevant_id']):
+                found = True
+            else:
+                new_id.append(user_id)
+        if(found == False):
+            return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
+
+        for user_id in other_relevant_user:
+            if(user_id != req['user_id']):
+                new_other_id.append(user_id)
+        new_id = json.dumps(new_id)
+        new_other_id = json.dumps(new_other_id)
+        user.relevant_id = new_id
+        relevant_user.relevant_id = new_other_id
+        db_session.add(user);
+        db_session.add(relevant_user);
+        db_session.commit();
+
+        user = db_session.query(User).filter(User.id == req['user_id']).first()
+        return common.make_response_packet('Relevant ID Removed Successfully', user.toDict(), 200, False, None)
+
+    ################################### Remove Customer and Shoperkeeper Relevant ID End #####################################################
+    ################################### List Customer and Shoperkeeper Relevant ID Start #####################################################
+    def list_user_shopkeeper(self, req):
+        if(not req):
+            return common.make_response_packet('', None, 400, False, 'Invalid data User_id is required')
+        if (not 'user_id' in req):
+            return common.make_response_packet('', None, 400, False, 'User ID is required')
+        user = db_session.query(User).filter(User.id == req['user_id']).first()
+        if(not user):
+            return common.make_response_packet('', None, 400, False, 'User not found')
+        all_relevant_user = json.loads(user.relevant_id)
+        user_list = []
+        for user_id in all_relevant_user:
+            user = db_session.query(User).filter(User.id == user_id).first();
+            user_list.append(user.toDict())
+        return common.make_response_packet('Relevant Users are reterived Successfully', user_list, 200, False, None)
+    ################################### List Customer and Shoperkeeper Relevant ID End #####################################################
 
 UAP = UserAccountsProcessor()

@@ -54,3 +54,15 @@ def forgetPassword():
 def resetPassword():
     return UAP.reset_password(request.json)
 
+@user_bp.route("/addCustomer_Shopkeeper", methods=['POST'])
+def add_Customer_Shopkeeper():
+    return UAP.add_user_shopkeeper(request.json)
+
+@user_bp.route("/removeCustomer_Shopkeeper", methods=['POST'])
+def remove_Customer_Shopkeeper():
+    return UAP.remove_user_shopkeeper(request.json);
+
+@user_bp.route("/listCustomer_Shopkeeper", methods=['POST'])
+def list_Customer_Shopkeeper():
+    return UAP.list_user_shopkeeper(request.json);
+
