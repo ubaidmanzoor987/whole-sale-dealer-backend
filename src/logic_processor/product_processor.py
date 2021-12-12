@@ -111,13 +111,13 @@ class ProductsProcessor:
             db_session.commit()
             return common.make_response_packet('Product inserted successfully', p.toDict(), 200, True, '')
         except Exception as ex:
-            print("Exception in proccess_insert_brand", ex)
+            print("Exception in proces_insert_product", ex)
             return common.make_response_packet("", None, 400, False, "Server Error")
 
         Session.session.destroy_session()
 ###############################################################################
 
-    def list_products_shopkeeper(self, req):
+    def list_products(self, req):
         try:
             if not 'user_id' in req:
                 return common.make_response_packet('', None, 400, False, 'User id is required')
@@ -132,7 +132,11 @@ class ProductsProcessor:
             if(is_user_exist.user_type == 'shop_keeper'):
                 products = db_session.query(Products).filter(Products.user_id == user_id).all();
                 for p in products:
-                    product_data.append(p.toDict())
+                    pro = p.toDict()
+                    del pro['image1']
+                    del pro['image2']
+                    del pro['image3']
+                    product_data.append(pro)
             else:
                 relevant_user = json.loads(is_user_exist.relevant_id);
                 for user in relevant_user:
@@ -215,4 +219,59 @@ class ProductsProcessor:
         Session.session.destroy_session()
 
 ###############################################################################
+
+###############################################################################
+
+    def get_product(self, req):
+        try:
+            if not 'product_id' in req:
+                return common.make_response_packet("", None, 400, False, "product id is required")
+            if not 'user_id' in req:
+                return common.make_response_packet("", None, 400, False, "user id is required")
+
+            user_id = req['user_id']
+            product_id = req['product_id']
+            is_user_exist = db_session.query(User).filter(User.id == user_id).first()
+            if not is_user_exist:
+                return common.make_response_packet('', None, 400, False, 'Invalid user id')
+            prod = db_session.query(Products).filter(Products.id == product_id).first()
+            resp = prod.toDict();
+            target = os.path.abspath("static/")
+            user_folder = os.path.join(target, is_user_exist.user_name)
+            if not os.path.isdir(user_folder):
+                resp['image1'] = ''
+                resp['image2'] = ''
+                resp['image3'] = ''
+            else:
+                product_folder = os.path.join(user_folder,"product_pic")
+                if not os.path.isdir(product_folder):
+                    resp['image1'] = ''
+                    resp['image2'] = ''
+                    resp['image3'] = ''
+                else:
+                    image1 = prod.image1 + ".png";
+                    image2 = prod.image2 + ".png";
+                    image3 = prod.image3 + ".png";
+                    if not os.path.isfile(os.path.join(product_folder, image1)):
+                        resp['image1'] = ''
+                    else:
+                        resp['image1'] = "static\\"+is_user_exist.user_name+"\\product_pic"+"\\"+image1;
+                    if not os.path.isfile(os.path.join(product_folder, image2)):
+                        resp['image2'] = ''
+                    else:
+                        resp['image2'] = "static\\"+is_user_exist.user_name+"\\product_pic"+"\\"+image2;
+                    if not os.path.isfile(os.path.join(product_folder, image3)):
+                        resp['image3'] = ''
+                    else:
+                        resp['image3'] = "static\\"+is_user_exist.user_name+"\\product_pic"+"\\"+image3;
+
+            return common.make_response_packet('', resp, 200, True, '')
+
+        except Exception as ex:
+            print("Exception in delete_product", ex)
+            return common.make_response_packet("", None, 400, False, "Server Error")
+        Session.session.destroy_session()
+
+###############################################################################
+
 PP = ProductsProcessor()

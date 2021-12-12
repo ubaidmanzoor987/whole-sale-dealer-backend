@@ -15,7 +15,7 @@ class Products(Session.session.get_base()):
     brand_id = Column(Integer, ForeignKey("brands.id"))
     user_id = Column(Integer, ForeignKey("user.id"))
     brand_rel = relationship("Brands")
-    shopkeeper_rel = relationship("Brands")
+    shopkeeper_rel = relationship("User")
     def __init__(self,
                  product_name=None,
                  image1=None,

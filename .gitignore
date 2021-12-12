@@ -4,3 +4,4 @@ venv
 *.xml
 .env
 Pipfile.lock
+static
