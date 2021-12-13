@@ -126,17 +126,40 @@ class ProductsProcessor:
             is_user_exist = db_session.query(User).filter(User.id == user_id).first()
             if not is_user_exist:
                 return common.make_response_packet('', None, 400, False, 'Invalid user id')
-            #elif is_user_exist.user_type != "shop_keeper":
-            #    return common.make_response_packet('', None, 400, False, 'Not a shopkeeper')
             product_data = []
             if(is_user_exist.user_type == 'shop_keeper'):
+                target = os.path.abspath("static/")
+                user_folder = os.path.join(target, is_user_exist.user_name)
                 products = db_session.query(Products).filter(Products.user_id == user_id).all();
                 for p in products:
-                    pro = p.toDict()
-                    del pro['image1']
-                    del pro['image2']
-                    del pro['image3']
-                    product_data.append(pro)
+                    resp = p.toDict()
+                    if not os.path.isdir(user_folder):
+                        resp['image1'] = ''
+                        resp['image2'] = ''
+                        resp['image3'] = ''
+                    else:
+                        product_folder = os.path.join(user_folder, "product_pic")
+                        if not os.path.isdir(product_folder):
+                            resp['image1'] = ''
+                            resp['image2'] = ''
+                            resp['image3'] = ''
+                        else:
+                            image1 = resp["image1"] + ".png" if "image1" in resp else "";
+                            image2 = resp["image2"] + ".png" if "image2" in resp else "";
+                            image3 = resp["image3"] + ".png" if "image3" in resp else "" ;
+                            if not os.path.isfile(os.path.join(product_folder, image1)):
+                                resp['image1'] = ''
+                            else:
+                                resp['image1'] = "static\\" + is_user_exist.user_name + "\\product_pic" + "\\" + image1;
+                            if not os.path.isfile(os.path.join(product_folder, image2)):
+                                resp['image2'] = ''
+                            else:
+                                resp['image2'] = "static\\" + is_user_exist.user_name + "\\product_pic" + "\\" + image2;
+                            if not os.path.isfile(os.path.join(product_folder, image3)):
+                                resp['image3'] = ''
+                            else:
+                                resp['image3'] = "static\\" + is_user_exist.user_name + "\\product_pic" + "\\" + image3;
+                    product_data.append(resp)
             else:
                 relevant_user = json.loads(is_user_exist.relevant_id);
                 for user in relevant_user:
