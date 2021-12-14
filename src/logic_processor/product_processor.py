@@ -117,6 +117,16 @@ class ProductsProcessor:
         Session.session.destroy_session()
 ###############################################################################
 
+    def convert_img_to_b64(self, imagePath):
+        try:
+            import base64
+            with open(imagePath, "rb") as img_file:
+                b64_string = base64.b64encode(img_file.read())
+                return b64_string.decode('utf-8');
+        except Exception as ex:
+            print("Exception in convert img to b64", ex);
+            return "";
+
     def list_products(self, req):
         try:
             if not 'user_id' in req:
@@ -143,22 +153,31 @@ class ProductsProcessor:
                             resp['image1'] = ''
                             resp['image2'] = ''
                             resp['image3'] = ''
+                            resp["image1b64"] = ''
+                            resp["image2b64"] = ''
+                            resp["image3b64"] = ''
                         else:
                             image1 = resp["image1"] + ".png" if "image1" in resp else "";
                             image2 = resp["image2"] + ".png" if "image2" in resp else "";
                             image3 = resp["image3"] + ".png" if "image3" in resp else "" ;
                             if not os.path.isfile(os.path.join(product_folder, image1)):
                                 resp['image1'] = ''
+                                resp["image1b64"] = ''
                             else:
                                 resp['image1'] = "static\\" + is_user_exist.user_name + "\\product_pic" + "\\" + image1;
+                                resp["image1b64"] = self.convert_img_to_b64(os.path.join(product_folder, image1))
                             if not os.path.isfile(os.path.join(product_folder, image2)):
                                 resp['image2'] = ''
+                                resp["image2b64"] = ''
                             else:
                                 resp['image2'] = "static\\" + is_user_exist.user_name + "\\product_pic" + "\\" + image2;
+                                resp["image2b64"] = self.convert_img_to_b64(os.path.join(product_folder, image2))
                             if not os.path.isfile(os.path.join(product_folder, image3)):
                                 resp['image3'] = ''
+                                resp["image3b64"] = ''
                             else:
                                 resp['image3'] = "static\\" + is_user_exist.user_name + "\\product_pic" + "\\" + image3;
+                                resp["image3b64"] = self.convert_img_to_b64(os.path.join(product_folder, image3))
                     product_data.append(resp)
             else:
                 relevant_user = json.loads(is_user_exist.relevant_id);
@@ -166,6 +185,7 @@ class ProductsProcessor:
                     products = db_session.query(Products).filter(Products.user_id == user).all();
                     for p in products:
                         product_data.append(p.toDict());
+
             return common.make_response_packet('success', product_data, 200, True, '')
 
         except Exception as ex:
@@ -194,8 +214,64 @@ class ProductsProcessor:
                 return common.make_response_packet('', None, 400, False, 'You are not shopkeeper')
 
             pr = db_session.query(Products).filter(Products.id == product_id).first()
+
             if (not pr):
                 return common.make_response_packet('', None, 400, False, 'invalid product id')
+                # Save Image
+            image1 = req['image1'] if 'image1' in req else ''
+            image2 = req['image2'] if 'image2' in req else ''
+            image3 = req['image3'] if 'image3' in req else ''
+            if image1 != '':
+                target = os.path.abspath("static/")
+                user_folder_create = os.path.join(target, is_user_exist.user_name)
+                if not os.path.isdir(user_folder_create):
+                    os.mkdir(user_folder_create)
+                user_product_direc = os.path.join(user_folder_create, "product_pic")
+                if not os.path.isdir(user_product_direc):
+                    os.mkdir(user_product_direc)
+                f = image1
+                im = Image.open(BytesIO(b64decode(f.split(',')[1])))
+                filename = uuid.uuid1().hex
+                destination = "\\".join([user_product_direc, filename])
+                im.save(destination + ".png")
+                image1 = filename
+
+            if image2 != '':
+                target = os.path.abspath("static/")
+                user_folder_create = os.path.join(target, is_user_exist.user_name)
+                if not os.path.isdir(user_folder_create):
+                    os.mkdir(user_folder_create)
+                user_product_direc = os.path.join(user_folder_create, "product_pic")
+                if not os.path.isdir(user_product_direc):
+                    os.mkdir(user_product_direc)
+                f = image2
+                im = Image.open(BytesIO(b64decode(f.split(',')[1])))
+                filename = uuid.uuid1().hex
+                destination = "\\".join([user_product_direc, filename])
+                im.save(destination + ".png")
+                image2 = filename
+
+            if image3 != '':
+                target = os.path.abspath("static/")
+                user_folder_create = os.path.join(target, is_user_exist.user_name)
+                if not os.path.isdir(user_folder_create):
+                    os.mkdir(user_folder_create)
+                user_product_direc = os.path.join(user_folder_create, "product_pic")
+                if not os.path.isdir(user_product_direc):
+                    os.mkdir(user_product_direc)
+                f = image3
+                im = Image.open(BytesIO(b64decode(f.split(',')[1])))
+                filename = uuid.uuid1().hex
+                destination = "\\".join([user_product_direc, filename])
+                im.save(destination + ".png")
+                image3 = filename
+
+            if 'image1' in req:
+                req['image1'] = image1
+            if 'image2' in req:
+                req['image2'] = image2
+            if 'image3' in req:
+                req['image3'] = image3
             keys = pr.__table__.columns
             updated = False
             for k in keys:
