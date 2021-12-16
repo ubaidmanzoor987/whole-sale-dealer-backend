@@ -221,7 +221,16 @@ class ProductsProcessor:
             image1 = req['image1'] if 'image1' in req else ''
             image2 = req['image2'] if 'image2' in req else ''
             image3 = req['image3'] if 'image3' in req else ''
-            if image1 != '':
+            isImage1Update = req['isImage1Update'] if 'isImage1Update' in req else False
+            isImage2Update = req['isImage2Update'] if 'isImage2Update' in req else False
+            isImage3Update = req['isImage3Update'] if 'isImage3Update' in req else False
+            if isImage1Update == False and 'image1' in req:
+                del req['image1']
+            if isImage2Update == False and 'image2' in req:
+                del req['image2']
+            if isImage3Update == False and 'image3' in req:
+                del req['image3']
+            if image1 != '' and isImage1Update == True:
                 target = os.path.abspath("static/")
                 user_folder_create = os.path.join(target, is_user_exist.user_name)
                 if not os.path.isdir(user_folder_create):
@@ -234,9 +243,9 @@ class ProductsProcessor:
                 filename = uuid.uuid1().hex
                 destination = "\\".join([user_product_direc, filename])
                 im.save(destination + ".png")
-                image1 = filename
+                req['image1'] = filename
 
-            if image2 != '':
+            if image2 != '' and isImage2Update == True:
                 target = os.path.abspath("static/")
                 user_folder_create = os.path.join(target, is_user_exist.user_name)
                 if not os.path.isdir(user_folder_create):
@@ -249,9 +258,9 @@ class ProductsProcessor:
                 filename = uuid.uuid1().hex
                 destination = "\\".join([user_product_direc, filename])
                 im.save(destination + ".png")
-                image2 = filename
+                req['image2'] = filename
 
-            if image3 != '':
+            if image3 != '' and isImage3Update == True:
                 target = os.path.abspath("static/")
                 user_folder_create = os.path.join(target, is_user_exist.user_name)
                 if not os.path.isdir(user_folder_create):
@@ -264,14 +273,8 @@ class ProductsProcessor:
                 filename = uuid.uuid1().hex
                 destination = "\\".join([user_product_direc, filename])
                 im.save(destination + ".png")
-                image3 = filename
+                req['image3'] = filename
 
-            if 'image1' in req:
-                req['image1'] = image1
-            if 'image2' in req:
-                req['image2'] = image2
-            if 'image3' in req:
-                req['image3'] = image3
             keys = pr.__table__.columns
             updated = False
             for k in keys:
