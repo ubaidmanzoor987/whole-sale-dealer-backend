@@ -63,22 +63,13 @@ class UserAccountsProcessor:
     ################################### Logout Start ###########################################
     def process_logout(self, req):
         try:
-            if not 'user_name' in req:
-                return common.make_response_packet('User Name is required', None, 400, False, None)
-            if not 'user_type' in req:
-                return common.make_response_packet('User Type is required', None, 400, False, None)
+            if not 'user_id' in req:
+                return common.make_response_packet('user_id is required', None, 400, False, None)
 
-            user_name = req['user_name']
-            user_type = req['user_type']
-
-            s = None
-            if user_type == 'shop_keeper':
-                s = db_session.query(User).filter( User.user_name == user_name ).first()
-            else:
-                return common.make_response_packet("Not valid user type", None, 400, False, None)
-
+            user_id = req['user_id']
+            s = db_session.query(User).filter( User.id == user_id ).first()
             if s is None:
-                return common.make_response_packet("Incorrect User Name", None, 400, False, None)
+                return common.make_response_packet("Incorrect user id ", None, 400, False, None)
             s.token = None
             db_session.add(s)
             db_session.commit()
@@ -139,7 +130,7 @@ class UserAccountsProcessor:
 
     def update_user(self, req):
         try:
-            if not 'user_id' in req:
+            if not 'id' in req:
                 return common.make_response_packet('', None, 400, False, 'User Id is required')
 
             if not 'shop_name' in req:
@@ -148,7 +139,7 @@ class UserAccountsProcessor:
             if not 'email' in req:
                 return common.make_response_packet('', None, 400, False, 'Email is required')
 
-            user_id = req['user_id']
+            user_id = req['id']
             image = req['image'] if 'image' in req else ''
             user = db_session.query(User).filter(User.id == user_id).first()
             if not user:
