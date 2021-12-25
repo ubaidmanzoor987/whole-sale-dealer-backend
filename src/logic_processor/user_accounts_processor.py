@@ -18,8 +18,21 @@ from base64 import b64decode
 class UserAccountsProcessor:
 
     ################################### Login Start ###########################################
+    def convert_img_to_b64(self, imagePath):
+        try:
+            import base64
+            with open(imagePath, "rb") as img_file:
+                b64_string = base64.b64encode(img_file.read())
+                return b64_string.decode('utf-8');
+        except Exception as ex:
+            print("Exception in convert img to b64", ex);
+            return "";
+
     def process_login(self, req):
         try:
+            if not req:
+                return common.make_response_packet('', None, 400, False, 'Invalid data, user_name, password, ... required')
+
             if not 'user_name' in req:
                 return common.make_response_packet('', None, 400, False, 'User Name is required')
 
@@ -33,12 +46,7 @@ class UserAccountsProcessor:
             password = req['password']
             user_type = req['user_type']
 
-            s = None
-            if user_type == 'shop_keeper':
-                s = db_session.query(User).filter( User.user_name == user_name ).first()
-            else:
-                return common.make_response_packet('', None, 400, False, 'Not valid user type')
-
+            s = db_session.query(User).filter( User.user_name == user_name ).first()
             if s is None:
                 return common.make_response_packet('', None, 400, False, 'Incorrect User Name')
 
@@ -53,7 +61,25 @@ class UserAccountsProcessor:
             db_session.add(s)
             db_session.commit()
             Session.session.destroy_session()
-            return common.make_response_packet("Login Successfully", s.toDict(), 200, True, None)
+            user = db_session.query(User).filter(User.user_name == user_name).first()
+            resp = user.toDict()
+            target = os.path.abspath("static/")
+            user_folder = os.path.join(target, user.user_name)
+            if not os.path.isdir(user_folder):
+                resp['image'] = ''
+            profile_pic_folder = os.path.join(user_folder, "profile_pic")
+            if not os.path.isdir(profile_pic_folder):
+                resp['image'] = ''
+            else:
+                image = resp["image"] + ".png" if "image" in resp else "";
+                if not os.path.isfile(os.path.join(profile_pic_folder, image)):
+                    resp['image'] = ''
+                    resp["imageb64"] = ''
+                else:
+                    resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
+                    resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
+
+            return common.make_response_packet("Login Successfully", resp, 200, True, None)
         except Exception as ex:
             print("Exception in process_login ", ex)
             return common.make_response_packet('', None, 400, False, 'Server Error' + ex.Message)
@@ -63,6 +89,8 @@ class UserAccountsProcessor:
     ################################### Logout Start ###########################################
     def process_logout(self, req):
         try:
+            if not req:
+                return common.make_response_packet('', None, 400, False, 'Invalid data, user_id is ... required')
             if not 'user_id' in req:
                 return common.make_response_packet('user_id is required', None, 400, False, None)
 
@@ -84,6 +112,9 @@ class UserAccountsProcessor:
     ################################### Insert Shopkeeper Start ###########################################
     def process_register(self,req):
         try:
+            if not req:
+                return common.make_response_packet('', None, 400, False, 'Invalid data, user_name, shop_name, password is required')
+
             if not 'user_name' in req:
                 return common.make_response_packet('', None, 400, False, 'User Name is required')
 
@@ -117,11 +148,11 @@ class UserAccountsProcessor:
             s = User(user_name=user_name, shop_name=shop_name, password=password, user_type=user_type, email=email)
             db_session.add(s)
             db_session.commit()
-            Session.session.destroy_session()
             return common.make_response_packet("Shop keeper Inserted Successfully", s.toDict(), 200, True, None)
         except Exception as ex:
             print("Exception in proccess_signup", ex)
             return common.make_response_packet("", None, 400, False, "Server Error")
+        Session.session.destroy_session()
 
     ###################################Insert Shopkeeper End ###########################################
 
@@ -130,6 +161,9 @@ class UserAccountsProcessor:
 
     def update_user(self, req):
         try:
+            if not req:
+                return common.make_response_packet('', None, 400, False, 'Invalid data, usr_id, is required')
+
             if not 'id' in req:
                 return common.make_response_packet('', None, 400, False, 'User Id is required')
 
@@ -140,23 +174,19 @@ class UserAccountsProcessor:
                 return common.make_response_packet('', None, 400, False, 'Email is required')
 
             user_id = req['id']
-            image = req['image'] if 'image' in req else ''
+            image = req['imagebase64'] if 'imagebase64' in req else ''
             user = db_session.query(User).filter(User.id == user_id).first()
             if not user:
                 return common.make_response_packet('', None, 400, False, 'Invalid user id')
             if image != '':
                 target = os.path.abspath("static/")
-                print(target)
                 user_folder_create = os.path.join(target, user.user_name)
-                print(os.path.isdir(user_folder_create))
-
                 if not os.path.isdir(user_folder_create):
                     os.mkdir(user_folder_create)
                 user_profile_direc = os.path.join(user_folder_create, "profile_pic")
-                print(os.path.isdir(user_profile_direc))
                 if not os.path.isdir(user_profile_direc):
                     os.mkdir(user_profile_direc)
-                f = req['image']
+                f = image
                 im = Image.open(BytesIO(b64decode(f.split(',')[1])))
                 filename = uuid.uuid1().hex
                 destination = "\\".join([user_profile_direc, filename])
@@ -176,247 +206,258 @@ class UserAccountsProcessor:
         except Exception as ex:
             print("Exception in update_user", ex)
             return common.make_response_packet('', None, 400, False, 'Server Error')
-
         Session.session.destroy_session()
 
     def convert_and_save(self, b64_string, file_name):
         with open("file_name.png", "wb") as fh:
             fh.write(base64.decodebytes(b64_string.encode()))
 
-################################### Update Shopkeeper End ###########################################
-
-
-    ################################### Update Shopkeeper Picture Start ###########################################
-    def update_shopkeeper_picture(self,s):
-        authentic = common.is_user_authenticated()
-        if (not authentic):
-            return common.make_response_packet(4, "User is not authenticated", None)
-        target = os.path.abspath("static/")
-        if (not s['shopkeeper_id']):
-            return common.make_response_packet(5, 'Shopkeeper id is required', None)
-        shop = db_session.query(User).filter(User.id == s['shopkeeper_id']).first()
-        if (not shop):
-            return common.make_response_packet(6, 'shopkeeper_id is not valid', None)
-        user_folder_create = os.path.join(target,shop.user_name)
-        if not os.path.isdir(user_folder_create):
-            os.mkdir(user_folder_create)
-        user_profile_direc = os.path.join(user_folder_create,"profile_pics")
-        if not os.path.isdir(user_profile_direc):
-            os.mkdir(user_profile_direc)
-        f = s['file_attachement']
-        f = bytes(f, 'utf-8')
-        filename = uuid.uuid1().hex
-        shop.image = filename
-        destination = "/".join([user_profile_direc, filename])
-        print(destination)
-        with open(destination + ".jpg", "wb") as fh:
-            fh.write(base64.decodebytes(f))
-        db_session.commit()
-        return common.make_response_packet(1, 'Image Updated Successfully', 'Server Data')
-
-    ################################### Update Shopkeeper Picture End ###########################################
-
-    ################################### Get Shopkeeper Picture Start ###########################################
-    def get_shopkeeper_picture(self,s):
-        authentic = common.is_user_authenticated()
-        if (not authentic):
-            return common.make_response_packet(4, "User is not authenticated", None)
-        target = os.path.abspath("static/")
-        if (not s['shopkeeper_id']):
-            return common.make_response_packet(5, 'Shopkeeper id is required', None)
-        shop = db_session.query(User).filter(User.id == s['shopkeeper_id']).first()
-        if (not shop):
-            return common.make_response_packet(6, 'shopkeeper_id is not valid', None)
-        if shop.image:
-            user_profile_direc = os.path.join(target, shop.user_name+"\profile_pics\\"+shop.image)
-            print(target)
-            print(user_profile_direc)
-            with open(user_profile_direc + ".jpg", "rb") as image_file:
-                my_string = base64.b64encode(image_file.read())
-            return common.make_response_packet(1, 'success', my_string.decode('utf-8'))
-        else:
-            user_profile_direc = (target + "\\default.jpg")
-            print(target)
-            print(user_profile_direc)
-
-            with open(user_profile_direc, "rb") as image_file:
-                my_string = base64.b64encode(image_file.read())
-
-            return common.make_response_packet(1, 'success', my_string.decode('utf-8'))
-
-    ################################### Get Shopkeeper Picture End ###########################################
+    ################################### Update Shopkeeper End ###########################################
 
     ################################### Update Shopkeeper Password Start ###########################################
     def update_pass_shop(self, s):
-        if (not 'user_name' in s):
-            return common.make_response_packet('', None, 400, False, 'User Name is required')
+        try:
+            if not s:
+                return common.make_response_packet('', None, 400, False, 'invalid data user_name, new_password, is requies...')
 
-        shop = db_session.query(User).filter(User.user_name == s['user_name']).first()
-        if (not shop):
-            return common.make_response_packet('', None, 400, False, 'Invalid UserName')
+            if (not 'user_name' in s):
+                return common.make_response_packet('', None, 400, False, 'User Name is required')
 
-        if not 'old_password' in s:
-            return common.make_response_packet('', None, 400, False, 'Old Password is Required')
+            shop = db_session.query(User).filter(User.user_name == s['user_name']).first()
+            if (not shop):
+                return common.make_response_packet('', None, 400, False, 'Invalid UserName')
 
-        if not 'new_password' in s:
-            return common.make_response_packet('', None, 400, False, 'New Password is Required')
+            if not 'old_password' in s:
+                return common.make_response_packet('', None, 400, False, 'Old Password is Required')
 
-        correct = check_password_hash(shop.password, s['old_password'])
-        if correct:
-            shop.password = generate_password_hash(s['new_password'])
-            db_session.commit()
-            Session.session.destroy_session()
-            return common.make_response_packet('Password Updated Successfully', shop.toDict() , 200, True, None)
+            if not 'new_password' in s:
+                return common.make_response_packet('', None, 400, False, 'New Password is Required')
 
-        else:
-            return common.make_response_packet('', None, 400, False, 'Incorrect Old Password')
+            correct = check_password_hash(shop.password, s['old_password'])
+            if correct:
+                shop.password = generate_password_hash(s['new_password'])
+                db_session.commit()
+                Session.session.destroy_session()
+                return common.make_response_packet('Password Updated Successfully', shop.toDict() , 200, True, None)
+            else:
+                return common.make_response_packet('', None, 400, False, 'Incorrect Old Password')
+        except Exception as ex:
+            print("Exception in update_pass_shop", ex)
+            return common.make_response_packet("Server Error", None, 400, False, ex)
+        Session.session.destroy_session()
 
     ################################### Update Shopkeeper Password End ###########################################
 
     ################################### Foget Password start #####################################################
     def forget_Password(self, s):
-        if(not 'email' in s):
-            return common.make_response_packet('', None, 400, False, 'Email is required')
-        email = s['email']
-        user = db_session.query(User).filter(User.email == email).first();
-        if user and user.user_name:
-            return common.make_response_packet('User Found', user.toDict(), 200, False, None)
-        else:
-            return common.make_response_packet('', None, 400, False, 'Not found')
+        try:
+            if not s:
+                return common.make_response_packet('', None, 400, False, 'invalid data email is requires')
 
-    ################################### Foget Password End #####################################################
+            if(not 'email' in s):
+                return common.make_response_packet('', None, 400, False, 'Email is required')
+            email = s['email']
+            user = db_session.query(User).filter(User.email == email).first();
+            if user and user.user_name:
+                return common.make_response_packet('User Found', user.toDict(), 200, False, None)
+            else:
+                return common.make_response_packet('', None, 400, False, 'Not found')
+        except Exception as ex:
+            print("Exception in forget_Password", ex)
+            return common.make_response_packet("Server Error", None, 400, False, ex)
+        Session.session.destroy_session()
+
+    ################################### Foget Password End #######################################################
+
     ################################### Reset Password start #####################################################
     def reset_password(self, s):
-        if (not 'email' in s):
-            return common.make_response_packet('', None, 400, False, 'Email is Required')
-        if (not 'password' in s):
-            return common.make_response_packet('', None, 400, False, 'Password is Required')
-        if (not 'confirm_password' in s):
-            return common.make_response_packet('', None, 400, False, 'Confirm Password is Required')
-        if (s['passowrd'] != s['confirm_password']):
-            return common.make_response_packet('', None, 400, False, 'Password is not matched')
+        try:
+            if not s:
+                return common.make_response_packet('', None, 400, False, 'Invalid Data, Email,Password is reqiuies')
+            if (not 'email' in s):
+                return common.make_response_packet('', None, 400, False, 'Email is Required')
+            if (not 'password' in s):
+                return common.make_response_packet('', None, 400, False, 'Password is Required')
 
-        email = s['email'];
-        password = s['password'];
+            email = s['email'];
+            password = s['password'];
 
-        user = db_session.query(User).filter(User.email == email).first()
+            user = db_session.query(User).filter(User.email == email).first()
 
-        user.password = generate_password_hash(password);
-        db_session.add(user);
-        db_session.commit();
-        return common.make_response_packet('Password updated Successfully', user.toDict(), 200, False, None)
+            user.password = generate_password_hash(password);
+            db_session.add(user);
+            db_session.commit();
+            return common.make_response_packet('Password updated Successfully', user.toDict(), 200, False, None)
+        except Exception as ex:
+            print("Exception in update_pass_shop", ex)
+            return common.make_response_packet("Server Error", None, 400, False, ex)
+        Session.session.destroy_session()
 
-    ################################### Reset Password End #####################################################
+    ################################### Reset Password End ###############################################################
     ################################### Add Customer and Shoperkeeper #####################################################
 
 
     ################################### Add Customer and Shoperkeeper Relevant ID #####################################################
 
     def add_user_shopkeeper(self, req):
-        if(not req):
-            return common.make_response_packet('', None, 400, False, 'User_id, relevant_id is required')
-        if (not 'user_id' in req):
-            return common.make_response_packet('', None, 400, False, 'User ID is required')
-        if(not 'relevant_id' in req):
-            return common.make_response_packet('', None, 400, False, 'Relevant ID is required')
-        relevant_user = db_session.query(User).filter(User.id == req['relevant_id']).first()
-        if(not relevant_user):
-            return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
-        user = db_session.query(User).filter(User.id == req['user_id']).first()
-        if(not user):
-            return common.make_response_packet('', None, 400, False, 'User not found')
-        if(relevant_user.user_type == 'shop_keeper' and user.user_type == 'shop_keeper'):
-            return common.make_response_packet('', None, 400, False, 'shop_keeper cannot added other shop_keeper')
-        elif(relevant_user.user_type == 'customer' and user.user_type == 'customer'):
-            return common.make_response_packet('', None, 400, False, 'customer cannot added other customer')
-        all_relevant_user = user.relevant_id
-        other_relevant_user = relevant_user.relevant_id
+        try:
+            if(not req):
+                return common.make_response_packet('', None, 400, False, 'User_id, relevant_id is required')
+            if (not 'user_id' in req):
+                return common.make_response_packet('', None, 400, False, 'User ID is required')
+            if(not 'relevant_id' in req):
+                return common.make_response_packet('', None, 400, False, 'Relevant ID is required')
+            relevant_user = db_session.query(User).filter(User.id == req['relevant_id']).first()
+            if(not relevant_user):
+                return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
+            user = db_session.query(User).filter(User.id == req['user_id']).first()
+            if(not user):
+                return common.make_response_packet('', None, 400, False, 'User not found')
+            if(relevant_user.user_type == 'shop_keeper' and user.user_type == 'shop_keeper'):
+                return common.make_response_packet('', None, 400, False, 'shop_keeper cannot added other shop_keeper')
+            elif(relevant_user.user_type == 'customer' and user.user_type == 'customer'):
+                return common.make_response_packet('', None, 400, False, 'customer cannot added other customer')
+            all_relevant_user = user.relevant_id
+            other_relevant_user = relevant_user.relevant_id
 
-        if(other_relevant_user is None):
-            other_relevant_user = json.dumps([]);
-        if(all_relevant_user is None):
-            all_relevant_user = json.dumps([])
+            if(other_relevant_user is None):
+                other_relevant_user = json.dumps([]);
+            if(all_relevant_user is None):
+                all_relevant_user = json.dumps([])
 
-        print(all_relevant_user)
-        all_relevant_user = json.loads(all_relevant_user)
-        other_relevant_user = json.loads(other_relevant_user)
+            print(all_relevant_user)
+            all_relevant_user = json.loads(all_relevant_user)
+            other_relevant_user = json.loads(other_relevant_user)
 
-        for user_id in all_relevant_user:
-            if (user_id == req['relevant_id']):
-                return common.make_response_packet('', None, 400, False, 'Relevant ID already exists')
-        all_relevant_user.append(req['relevant_id'])
-        other_relevant_user.append(req['user_id'])
-        all_relevant_user = json.dumps(all_relevant_user)
-        other_relevant_user = json.dumps(other_relevant_user)
+            for user_id in all_relevant_user:
+                if (user_id == req['relevant_id']):
+                    return common.make_response_packet('', None, 400, False, 'Relevant ID already exists')
+            all_relevant_user.append(req['relevant_id'])
+            other_relevant_user.append(req['user_id'])
+            all_relevant_user = json.dumps(all_relevant_user)
+            other_relevant_user = json.dumps(other_relevant_user)
 
+            user.relevant_id = all_relevant_user
+            relevant_user.relevant_id = other_relevant_user
+            db_session.add(user);
+            db_session.add(relevant_user);
+            db_session.commit();
 
-        user.relevant_id = all_relevant_user
-        relevant_user.relevant_id = other_relevant_user
-        db_session.add(user);
-        db_session.add(relevant_user);
-        db_session.commit();
+            user = db_session.query(User).filter(User.id == req['user_id']).first()
+            return common.make_response_packet('Relevant ID successully added', user.toDict(), 200, False, None)
+        except Exception as ex:
+            print("Exception in add_user_shopkeeper", ex)
+            return common.make_response_packet("Server Error", None, 400, False, ex)
+        Session.session.destroy_session()
 
-        user = db_session.query(User).filter(User.id == req['user_id']).first()
-        return common.make_response_packet('Relevant ID successully added', user.toDict(), 200, False, None)
     ################################### Add Customer and Shoperkeeper Relevant ID End #####################################################
     ################################### Remove Customer and Shoperkeeper Relevant ID Start #####################################################
 
     def remove_user_shopkeeper(self, req):
-        if(not req):
-            return common.make_response_packet('', None, 400, False, 'User_id, relevant_id is required')
-        if (not 'user_id' in req):
-            return common.make_response_packet('', None, 400, False, 'User ID is required')
-        if(not 'relevant_id' in req):
-            return common.make_response_packet('', None, 400, False, 'Relevant ID is required')
-        relevant_user = db_session.query(User).filter(User.id == req['relevant_id']).first()
-        if(not relevant_user):
-            return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
-        user = db_session.query(User).filter(User.id == req['user_id']).first()
-        if(not user):
-            return common.make_response_packet('', None, 400, False, 'User not found')
-        all_relevant_user = json.loads(user.relevant_id)
-        other_relevant_user = json.loads(relevant_user.relevant_id)
-        found = False
-        new_id = []
-        new_other_id = []
-        for user_id in all_relevant_user:
-            if(user_id == req['relevant_id']):
-                found = True
-            else:
-                new_id.append(user_id)
-        if(found == False):
-            return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
+        try:
+            if(not req):
+                return common.make_response_packet('', None, 400, False, 'User_id, relevant_id is required')
+            if (not 'user_id' in req):
+                return common.make_response_packet('', None, 400, False, 'User ID is required')
+            if(not 'relevant_id' in req):
+                return common.make_response_packet('', None, 400, False, 'Relevant ID is required')
+            relevant_user = db_session.query(User).filter(User.id == req['relevant_id']).first()
+            if(not relevant_user):
+                return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
+            user = db_session.query(User).filter(User.id == req['user_id']).first()
+            if(not user):
+                return common.make_response_packet('', None, 400, False, 'User not found')
+            all_relevant_user = json.loads(user.relevant_id)
+            other_relevant_user = json.loads(relevant_user.relevant_id)
+            found = False
+            new_id = []
+            new_other_id = []
+            for user_id in all_relevant_user:
+                if(user_id == req['relevant_id']):
+                    found = True
+                else:
+                    new_id.append(user_id)
+            if(found == False):
+                return common.make_response_packet('', None, 400, False, 'Relevant User is not found')
 
-        for user_id in other_relevant_user:
-            if(user_id != req['user_id']):
-                new_other_id.append(user_id)
-        new_id = json.dumps(new_id)
-        new_other_id = json.dumps(new_other_id)
-        user.relevant_id = new_id
-        relevant_user.relevant_id = new_other_id
-        db_session.add(user);
-        db_session.add(relevant_user);
-        db_session.commit();
+            for user_id in other_relevant_user:
+                if(user_id != req['user_id']):
+                    new_other_id.append(user_id)
+            new_id = json.dumps(new_id)
+            new_other_id = json.dumps(new_other_id)
+            user.relevant_id = new_id
+            relevant_user.relevant_id = new_other_id
+            db_session.add(user);
+            db_session.add(relevant_user);
+            db_session.commit();
 
-        user = db_session.query(User).filter(User.id == req['user_id']).first()
-        return common.make_response_packet('Relevant ID Removed Successfully', user.toDict(), 200, False, None)
+            user = db_session.query(User).filter(User.id == req['user_id']).first()
+            return common.make_response_packet('Relevant ID Removed Successfully', user.toDict(), 200, False, None)
+        except Exception as ex:
+            print("Exception in remove_user_shopkeeper_custoomer", ex)
+            return common.make_response_packet("Server Error", None, 400, False, ex)
+        Session.session.destroy_session()
 
     ################################### Remove Customer and Shoperkeeper Relevant ID End #####################################################
     ################################### List Customer and Shoperkeeper Relevant ID Start #####################################################
     def list_user_shopkeeper(self, req):
-        if(not req):
-            return common.make_response_packet('', None, 400, False, 'Invalid data User_id is required')
-        if (not 'user_id' in req):
-            return common.make_response_packet('', None, 400, False, 'User ID is required')
-        user = db_session.query(User).filter(User.id == req['user_id']).first()
-        if(not user):
-            return common.make_response_packet('', None, 400, False, 'User not found')
-        all_relevant_user = json.loads(user.relevant_id)
-        user_list = []
-        for user_id in all_relevant_user:
-            user = db_session.query(User).filter(User.id == user_id).first();
-            user_list.append(user.toDict())
-        return common.make_response_packet('Relevant Users are reterived Successfully', user_list, 200, False, None)
+        try:
+            if(not req):
+                return common.make_response_packet('', None, 400, False, 'Invalid data User_id is required')
+            if (not 'user_id' in req):
+                return common.make_response_packet('', None, 400, False, 'User ID is required')
+            user = db_session.query(User).filter(User.id == req['user_id']).first()
+            if(not user):
+                return common.make_response_packet('', None, 400, False, 'User not found')
+            all_relevant_user = json.loads(user.relevant_id)
+            user_list = []
+            for user_id in all_relevant_user:
+                user = db_session.query(User).filter(User.id == user_id).first();
+                user_list.append(user.toDict())
+            return common.make_response_packet('Relevant Users are reterived Successfully', json.dumps(user_list), 200, False, None)
+        except Exception as ex:
+            print("Exception in list_user_shopkeeer", ex)
+            return common.make_response_packet("Server Error", None, 400, False, ex)
+        Session.session.destroy_session()
+
     ################################### List Customer and Shoperkeeper Relevant ID End #####################################################
+
+    ################################### List Customer and Shoperkeeper Relevant ID Start #####################################################
+    def list_customers(self, req):
+        try:
+            users = db_session.query(User).filter(User.user_type == 'customer').all()
+            if (not users):
+                return common.make_response_packet('No Customers Found', [],
+                                                   400,
+                                                   False, None)
+            users_list = []
+            target = os.path.abspath("static/")
+            for user in users:
+                resp = user.toDict()
+                user_folder = os.path.join(target, user.user_name)
+                if not os.path.isdir(user_folder):
+                    resp['image'] = ''
+                profile_pic_folder = os.path.join(user_folder, "profile_pic")
+                if not os.path.isdir(profile_pic_folder):
+                    resp['image'] = ''
+                else:
+                    image = resp["image"] + ".png" if "image" in resp else "";
+                    if not os.path.isfile(os.path.join(profile_pic_folder, image)):
+                        resp['image'] = ''
+                        resp["imageb64"] = ''
+                    else:
+                        resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
+                        resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
+
+                users_list.append(resp)
+            return common.make_response_packet('Success', users_list, 200,
+                                               False, None)
+        except Exception as ex:
+            print("Exception in fetching customers list", ex)
+            return common.make_response_packet("Server Error", None, 400, False, ex)
+        Session.session.destroy_session()
+
+    ################################### List Customer and Shoperkeeper Relevant ID End #####################################################
+
 
 UAP = UserAccountsProcessor()

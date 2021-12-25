@@ -5,9 +5,9 @@ class User(Session.session.get_base()):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_name = Column(String(120), unique=True)
-    owner_name = Column(String(50), unique=False)
-    shop_name = Column(String(250), unique=False)
-    owner_phone_no = Column(String(20), unique=True)
+    owner_name = Column(String(50))
+    shop_name = Column(String(250))
+    owner_phone_no = Column(String(20))
     shop_phone_no1 = Column(String(20))
     shop_phone_no2 = Column(String(20))
     loc_long = Column(Float)
