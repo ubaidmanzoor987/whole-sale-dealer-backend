@@ -458,6 +458,25 @@ class UserAccountsProcessor:
         Session.session.destroy_session()
 
     ################################### List Customer and Shoperkeeper Relevant ID End #####################################################
+    def register_expo_notifcation(self, req):
+        try:
+            if(not req):
+                return common.make_response_packet('', None, 400, False, 'Invalid data user_id is required')
+            if (not 'user_id' in req):
+                return common.make_response_packet('', None, 400, False, 'user ID is required')
+            user_id = req['user_id']
+            expo_push_token = req['expo_push_token']
+            user = db_session.query(User).filter(User.id == user_id).first()
+            if(not user):
+                return common.make_response_packet('', None, 400, False, 'User not found')
+            user.expo_push_token = expo_push_token;
+            db_session.add(user)
+            db_session.commit();
+            return common.make_response_packet('Successfully registered expo push token', user.toDict(), 200, False, None)
+        except Exception as ex:
+            print("Exception in register_expo_notifcation", ex)
+            return common.make_response_packet("Server Error", None, 400, False, ex)
+        Session.session.destroy_session()
 
 
 UAP = UserAccountsProcessor()

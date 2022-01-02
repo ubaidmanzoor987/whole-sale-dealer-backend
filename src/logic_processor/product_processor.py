@@ -1,6 +1,8 @@
 import json
 
 from src.database.db import Session
+from src.logic_processor.pushnotifications import send_push_message
+
 Session.create_session()
 db_session = Session.session.get_session()
 engine = Session.session.get_engine()
@@ -109,6 +111,7 @@ class ProductsProcessor:
             )
             db_session.add(p)
             db_session.commit()
+            send_push_message(is_user_exist.expo_push_token, is_user_exist.user_name + "added new product " + product_name)
             return common.make_response_packet('Product inserted successfully', p.toDict(), 200, True, '')
         except Exception as ex:
             print("Exception in proces_insert_product", ex)
@@ -185,7 +188,6 @@ class ProductsProcessor:
                     products = db_session.query(Products).filter(Products.user_id == user).all();
                     for p in products:
                         product_data.append(p.toDict());
-
             return common.make_response_packet('success', product_data, 200, True, '')
 
         except Exception as ex:

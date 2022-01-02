@@ -70,3 +70,7 @@ def list_Customer_Shopkeeper():
 def list_customers():
     return UAP.list_customers(request.json);
 
+@user_bp.route("/notification/register", methods=['POST'])
+def register_expo_notification():
+    return UAP.register_expo_notifcation(request.json);
+
