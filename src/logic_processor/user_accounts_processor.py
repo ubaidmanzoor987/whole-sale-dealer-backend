@@ -409,12 +409,14 @@ class UserAccountsProcessor:
             user = db_session.query(User).filter(User.id == req['user_id']).first()
             if(not user):
                 return common.make_response_packet('', None, 400, False, 'User not found')
-            all_relevant_user = json.loads(user.relevant_id)
+            all_relevant_user =  []
+            if user.relevant_id:
+                all_relevant_user = json.loads(user.relevant_id)
             user_list = []
             for user_id in all_relevant_user:
                 user = db_session.query(User).filter(User.id == user_id).first();
                 user_list.append(user.toDict())
-            return common.make_response_packet('Relevant Users are reterived Successfully', json.dumps(user_list), 200, False, None)
+            return common.make_response_packet('Relevant Users are reterived Successfully', user_list, 200, False, None)
         except Exception as ex:
             print("Exception in list_user_shopkeeer", ex)
             return common.make_response_packet("Server Error", None, 400, False, ex)
