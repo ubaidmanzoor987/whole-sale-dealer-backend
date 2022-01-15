@@ -425,6 +425,11 @@ class UserAccountsProcessor:
     ################################### List Customer and Shoperkeeper Relevant ID Start #####################################################
     def list_customers(self, req):
         try:
+            if (not req):
+                return common.make_response_packet('', None, 400, False, 'User_id is required')
+            if (not 'user_id' in req):
+                return common.make_response_packet('', None, 400, False, 'User ID is required')
+            shopkeeper = db_session.query(User).filter(User.id == req['user_id']).first()
             users = db_session.query(User).filter(User.user_type == 'customer').all()
             if (not users):
                 return common.make_response_packet('No Customers Found', [],
@@ -450,7 +455,18 @@ class UserAccountsProcessor:
                         resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
 
                 users_list.append(resp)
-            return common.make_response_packet('Success', users_list, 200,
+
+                new_list = []
+                relevant_id = json.loads(shopkeeper.relevant_id)
+                print(shopkeeper.relevant_id)
+                for user in users_list:
+                    find = False
+                    for user_id in relevant_id:
+                        if(user_id == user.id):
+                            find = True
+                    if(find == False):
+                        new_list.append(user)
+            return common.make_response_packet('Success', new_list, 200,
                                                False, None)
         except Exception as ex:
             print("Exception in fetching customers list", ex)
