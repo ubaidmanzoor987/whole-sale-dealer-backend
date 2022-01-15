@@ -444,30 +444,34 @@ class UserAccountsProcessor:
                 user_folder = os.path.join(target, user.user_name)
                 if not os.path.isdir(user_folder):
                     resp['image'] = ''
+                    users_list.append(resp)
+                    continue
                 profile_pic_folder = os.path.join(user_folder, "profile_pic")
                 if not os.path.isdir(profile_pic_folder):
                     resp['image'] = ''
+                    users_list.append(resp)
+                    continue
                 else:
                     image = resp["image"] + ".png" if "image" in resp else "";
                     if not os.path.isfile(os.path.join(profile_pic_folder, image)):
                         resp['image'] = ''
                         resp["imageb64"] = ''
+                        users_list.append(resp)
+                        continue
                     else:
                         resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
                         resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
-
-                users_list.append(resp)
-
-                new_list = []
-                relevant_id = json.loads(shopkeeper.relevant_id)
-                print(shopkeeper.relevant_id)
-                for user in users_list:
-                    find = False
-                    for user_id in relevant_id:
-                        if(user_id == user.id):
-                            find = True
-                    if(find == False):
-                        new_list.append(user)
+            new_list = []
+            relevant_ids = []
+            if shopkeeper.relevant_id:
+                relevant_ids = json.loads(shopkeeper.relevant_id)
+            for user in users_list:
+                find = False
+                for user_id in relevant_ids:
+                    if(user_id == user['id']):
+                        find = True
+                if(find == False):
+                    new_list.append(user)
             return common.make_response_packet('Success', new_list, 200,
                                                False, None)
         except Exception as ex:
