@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, JSON
+from sqlalchemy import Column, Integer, String, Float, JSON, DateTime
 from src.database.db import Session
-
+import datetime
 class User(Session.session.get_base()):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -20,6 +20,8 @@ class User(Session.session.get_base()):
     token = Column(String(500))
     expo_push_token = Column(String(500))
     user_type = Column(String(200))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
     def __init__(self,
                  user_name = None,
                  shop_name=None,
@@ -36,7 +38,8 @@ class User(Session.session.get_base()):
                  token=None,
                  expo_push_token = None,
                  user_type = None,
-                 relevant_id=None
+                 relevant_id=None,
+                 updated_at = None
                  ):
         self.relevant_id = relevant_id
         self.user_name = user_name
@@ -54,6 +57,9 @@ class User(Session.session.get_base()):
         self.token = token
         self.expo_push_token = expo_push_token
         self.user_type = user_type
+        self.created_at = datetime.datetime.now()
+        self.updated_at = updated_at
+
     def __repr__(self):
         return '<User %r>' % (self.name)
 
@@ -74,7 +80,9 @@ class User(Session.session.get_base()):
             "token": self.token,
             "expo_push_token": self.expo_push_token,
             "user_type": self.user_type,
-            "relevant_id": self.relevant_id
+            "relevant_id": self.relevant_id,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
          }
         return u
 

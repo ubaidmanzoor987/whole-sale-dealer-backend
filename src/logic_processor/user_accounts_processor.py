@@ -8,6 +8,7 @@ Session.create_session()
 db_session = Session.session.get_session()
 engine = Session.session.get_engine()
 from src.models.User import User
+from src.models.ExpoPushTokens import ExpoPushTokens
 from src.logic_processor import common
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -55,7 +56,7 @@ class UserAccountsProcessor:
 
             env_variables = common.get_environ_variables()
             token = jwt.encode(
-                {'user_name': s.user_name, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=45)},
+                {'user_name': s.user_name, 'exp': datetime.datetime.now().utcnow() + datetime.timedelta(minutes=45)},
                 env_variables['SECRET_KEY'], "HS256")
             s.token = token
             db_session.add(s)
@@ -199,6 +200,7 @@ class UserAccountsProcessor:
                 updated |= common.check_and_update(user, req, k.name)
 
             if (updated):
+                user.updated_at = datetime.datetime.now()
                 db_session.commit()
                 return common.make_response_packet('User successfully updated', user.toDict(), 200, True, '')
             else:
@@ -494,10 +496,10 @@ class UserAccountsProcessor:
             user = db_session.query(User).filter(User.id == user_id).first()
             if(not user):
                 return common.make_response_packet('', None, 400, False, 'User not found')
-            user.expo_push_token = expo_push_token;
-            db_session.add(user)
+            ep = ExpoPushTokens(user_id=user_id, expo_push_token=expo_push_token)
+            db_session.add(ep)
             db_session.commit();
-            return common.make_response_packet('Successfully registered expo push token', user.toDict(), 200, False, None)
+            return common.make_response_packet('Successfully registered expo push token', ep.toDict(), 200, False, None)
         except Exception as ex:
             print("Exception in register_expo_notifcation", ex)
             return common.make_response_packet("Server Error", None, 400, False, ex)

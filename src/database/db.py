@@ -26,12 +26,12 @@ class Session:
         return self.Base
 
     def init_db(self):
-        self.engine = create_engine(DATABASE_URI)
+        self.engine = create_engine(DATABASE_URI, pool_size=20, max_overflow=0)
         self.db_session = scoped_session(sessionmaker(autocommit=False,
                                                       autoflush=True,
                                                       bind=self.engine))
         self.Base = declarative_base()
         self.Base.query = self.db_session.query_property()
-        from src.models import User, Brands, Products
+        from src.models import User, Brands, Products, Orders, ExpoPushTokens
         self.Base.metadata.create_all(bind=self.engine)
 

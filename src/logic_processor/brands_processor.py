@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from src.database.db import Session
@@ -30,7 +31,7 @@ class BrandsProcessor:
                 for i in range(len(select_shop_keeper)):
                     if brand_name == select_shop_keeper[i].brand_name:
                         return common.make_response_packet('', None, 400, False, 'Brand Name already exists')
-            b = Brands(brand_name,user_id, own_brand )
+            b = Brands(brand_name=brand_name,user_id=user_id, own_brand=own_brand)
             db_session.add(b)
             db_session.commit()
             return common.make_response_packet('Brand inserted successfully', b.toDict(), 200, True, '')
@@ -95,6 +96,7 @@ class BrandsProcessor:
             for k in keys:
                 updated |= common.check_and_update(brn, br, k.name)
             if (updated):
+                brn.updated_at = datetime.datetime.now()
                 db_session.commit()
                 return common.make_response_packet('Brand successfully updated', brn.toDict(), 200, True, '')
             else:

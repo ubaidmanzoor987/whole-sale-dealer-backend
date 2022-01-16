@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, DateTime
 from sqlalchemy.orm import relationship
 from src.database.db import Session
+import datetime
 
 class Products(Session.session.get_base()):
     __tablename__ = 'products'
@@ -16,6 +17,8 @@ class Products(Session.session.get_base()):
     user_id = Column(Integer, ForeignKey("user.id"))
     brand_rel = relationship("Brands")
     shopkeeper_rel = relationship("User")
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
     def __init__(self,
                  product_name=None,
                  image1=None,
@@ -26,6 +29,7 @@ class Products(Session.session.get_base()):
                  brand_id = None,
                  user_id = None,
                  quantities = None,
+                 updated_at = None,
                  ):
         self.product_name = product_name
         self.image1 = image1
@@ -36,6 +40,8 @@ class Products(Session.session.get_base()):
         self.brand_id = brand_id
         self.user_id = user_id
         self.quantities = quantities
+        self.created_at = datetime.datetime.now()
+        self.updated_at = updated_at
 
     def toDict(self):
         u = {
@@ -48,7 +54,9 @@ class Products(Session.session.get_base()):
                 "quantities": self.quantities,
                 "product_des": self.product_des,
                 "brand_id":self.brand_id,
-                "user_id":self.user_id
+                "user_id":self.user_id,
+                "created_at":self.created_at,
+                "updated_at":self.updated_at,
         }
         if(self.brand_rel):
             u["brand_name"] = self.brand_rel.brand_name

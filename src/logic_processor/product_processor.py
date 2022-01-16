@@ -1,21 +1,17 @@
+import datetime
 import json
-
 from src.database.db import Session
 from src.logic_processor.pushnotifications import send_push_message
-
 Session.create_session()
 db_session = Session.session.get_session()
 engine = Session.session.get_engine()
 from src.models.Products import Products
 from src.models.User import User
-from src.models.Brands import Brands
 from src.logic_processor import common
 import os
 from PIL import Image
 from io import BytesIO
 from base64 import b64decode
-import base64
-import datetime
 import uuid
 
 class ProductsProcessor:
@@ -335,6 +331,7 @@ class ProductsProcessor:
             for k in keys:
                 updated |= common.check_and_update(pr, req, k.name)
             if (updated):
+                pr.updated_at = datetime.datetime.now()
                 db_session.commit()
                 return common.make_response_packet('Product successfully updated', pr.toDict(), 200, True, '')
             else:
