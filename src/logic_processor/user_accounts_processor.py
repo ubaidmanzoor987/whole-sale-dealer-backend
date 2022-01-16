@@ -399,8 +399,10 @@ class UserAccountsProcessor:
         Session.session.destroy_session()
 
     ################################### Remove Customer and Shoperkeeper Relevant ID End #####################################################
+
+
     ################################### List Customer and Shoperkeeper Relevant ID Start #####################################################
-    def list_user_shopkeeper(self, req):
+    def list_relevent_users(self, req):
         try:
             if(not req):
                 return common.make_response_packet('', None, 400, False, 'Invalid data User_id is required')
@@ -409,6 +411,7 @@ class UserAccountsProcessor:
             user = db_session.query(User).filter(User.id == req['user_id']).first()
             if(not user):
                 return common.make_response_packet('', None, 400, False, 'User not found')
+
             all_relevant_user =  []
             if user.relevant_id:
                 all_relevant_user = json.loads(user.relevant_id)
@@ -418,7 +421,7 @@ class UserAccountsProcessor:
                 user_list.append(user.toDict())
             return common.make_response_packet('Relevant Users are reterived Successfully', user_list, 200, False, None)
         except Exception as ex:
-            print("Exception in list_user_shopkeeer", ex)
+            print("Exception in list_relevent_users", ex)
             return common.make_response_packet("Server Error", None, 400, False, ex)
         Session.session.destroy_session()
 

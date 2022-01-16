@@ -62,9 +62,9 @@ def add_Customer_Shopkeeper():
 def remove_Customer_Shopkeeper():
     return UAP.remove_user_shopkeeper(request.json);
 
-@user_bp.route("/shopkeeper/customers/list", methods=['POST'])
-def list_Customer_Shopkeeper():
-    return UAP.list_user_shopkeeper(request.json);
+@user_bp.route("/list/relevent/users", methods=['POST'])
+def list_relevent_users():
+    return UAP.list_relevent_users(request.json);
 
 @user_bp.route("/customers/list", methods=['POST'])
 def list_customers():

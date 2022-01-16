@@ -77,3 +77,14 @@ class User(Session.session.get_base()):
             "relevant_id": self.relevant_id
          }
         return u
+
+    def toDict1(self):
+        u = {
+            "user_id": self.id,
+            "user_name_shopkeeper" : self.user_name,
+            "user_shop_name" : self.shop_name,
+            "user_owner_name" : self.owner_name,
+            "user_address" : self.address,
+            "user_image" : self.image,
+         }
+        return u

@@ -130,6 +130,9 @@ class ProductsProcessor:
             print("Exception in convert img to b64", ex);
             return "";
 
+    def Merge(self, dict1, dict2):
+        return {**dict1, **dict2}
+
     def list_products(self, req):
         try:
             if not 'user_id' in req:
@@ -183,11 +186,61 @@ class ProductsProcessor:
                                 resp["image3b64"] = self.convert_img_to_b64(os.path.join(product_folder, image3))
                     product_data.append(resp)
             else:
-                relevant_user = json.loads(is_user_exist.relevant_id);
-                for user in relevant_user:
-                    products = db_session.query(Products).filter(Products.user_id == user).all();
-                    for p in products:
-                        product_data.append(p.toDict());
+                shopkeeper_ids = []
+                if (is_user_exist.relevant_id):
+                    shopkeeper_ids = json.loads(is_user_exist.relevant_id);
+                target = os.path.abspath("static/")
+                for shopkeeper_id in shopkeeper_ids:
+                    products = db_session.query(Products).filter(Products.user_id == shopkeeper_id).all();
+                    user = db_session.query(User).filter(User.id == shopkeeper_id).first()
+                    if user:
+                        user_dict = user.toDict1()
+                        user_folder = os.path.join(target, user.user_name)
+                        for p in products:
+                            resp = p.toDict();
+                            if not os.path.isdir(user_folder):
+                                resp['image1'] = ''
+                                resp['image2'] = ''
+                                resp['image3'] = ''
+                            else:
+                                product_folder = os.path.join(user_folder, "product_pic")
+                                if not os.path.isdir(product_folder):
+                                    resp['image1'] = ''
+                                    resp['image2'] = ''
+                                    resp['image3'] = ''
+                                    resp["image1b64"] = ''
+                                    resp["image2b64"] = ''
+                                    resp["image3b64"] = ''
+                                else:
+                                    image1 = resp["image1"] + ".png" if "image1" in resp else "";
+                                    image2 = resp["image2"] + ".png" if "image2" in resp else "";
+                                    image3 = resp["image3"] + ".png" if "image3" in resp else "";
+                                    if not os.path.isfile(os.path.join(product_folder, image1)):
+                                        resp['image1'] = ''
+                                        resp["image1b64"] = ''
+                                    else:
+                                        resp[
+                                            'image1'] = "static\\" + user.user_name + "\\product_pic" + "\\" + image1;
+                                        resp["image1b64"] = self.convert_img_to_b64(
+                                            os.path.join(product_folder, image1))
+                                    if not os.path.isfile(os.path.join(product_folder, image2)):
+                                        resp['image2'] = ''
+                                        resp["image2b64"] = ''
+                                    else:
+                                        resp[
+                                            'image2'] = "static\\" + user.user_name + "\\product_pic" + "\\" + image2;
+                                        resp["image2b64"] = self.convert_img_to_b64(
+                                            os.path.join(product_folder, image2))
+                                    if not os.path.isfile(os.path.join(product_folder, image3)):
+                                        resp['image3'] = ''
+                                        resp["image3b64"] = ''
+                                    else:
+                                        resp[
+                                            'image3'] = "static\\" + user.user_name + "\\product_pic" + "\\" + image3;
+                                        resp["image3b64"] = self.convert_img_to_b64(
+                                            os.path.join(product_folder, image3))
+                            combined_dict = self.Merge(user_dict,resp)
+                            product_data.append(combined_dict);
             return common.make_response_packet('success', product_data, 200, True, '')
 
         except Exception as ex:
