@@ -107,7 +107,7 @@ class ProductsProcessor:
             )
             db_session.add(p)
             db_session.commit()
-            send_push_message(is_user_exist.expo_push_token, is_user_exist.user_name + "added new product " + product_name)
+            # send_push_message(is_user_exist.expo_push_token, is_user_exist.user_name + "added new product " + product_name)
             return common.make_response_packet('Product inserted successfully', p.toDict(), 200, True, '')
         except Exception as ex:
             print("Exception in proces_insert_product", ex)

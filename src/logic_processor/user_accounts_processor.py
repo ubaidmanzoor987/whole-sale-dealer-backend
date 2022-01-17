@@ -68,17 +68,18 @@ class UserAccountsProcessor:
             user_folder = os.path.join(target, user.user_name)
             if not os.path.isdir(user_folder):
                 resp['image'] = ''
-            profile_pic_folder = os.path.join(user_folder, "profile_pic")
-            if not os.path.isdir(profile_pic_folder):
-                resp['image'] = ''
             else:
-                image = resp["image"] + ".png" if "image" in resp else "";
-                if not os.path.isfile(os.path.join(profile_pic_folder, image)):
+                profile_pic_folder = os.path.join(user_folder, "profile_pic")
+                if not os.path.isdir(profile_pic_folder):
                     resp['image'] = ''
-                    resp["imageb64"] = ''
                 else:
-                    resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
-                    resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
+                    image = resp["image"] + ".png" if "image" in resp else "";
+                    if not os.path.isfile(os.path.join(profile_pic_folder, image)):
+                        resp['image'] = ''
+                        resp["imageb64"] = ''
+                    else:
+                        resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
+                        resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
 
             return common.make_response_packet("Login Successfully", resp, 200, True, None)
         except Exception as ex:
@@ -327,7 +328,6 @@ class UserAccountsProcessor:
             if(all_relevant_user is None):
                 all_relevant_user = json.dumps([])
 
-            print(all_relevant_user)
             all_relevant_user = json.loads(all_relevant_user)
             other_relevant_user = json.loads(other_relevant_user)
 
@@ -369,8 +369,12 @@ class UserAccountsProcessor:
             user = db_session.query(User).filter(User.id == req['user_id']).first()
             if(not user):
                 return common.make_response_packet('', None, 400, False, 'User not found')
-            all_relevant_user = json.loads(user.relevant_id)
-            other_relevant_user = json.loads(relevant_user.relevant_id)
+            all_relevant_user = []
+            other_relevant_user = []
+            if user.relevant_id:
+                all_relevant_user = json.loads(user.relevant_id)
+            if relevant_user.relevant_id:
+                other_relevant_user = json.loads(relevant_user.relevant_id)
             found = False
             new_id = []
             new_other_id = []
@@ -392,7 +396,6 @@ class UserAccountsProcessor:
             db_session.add(user);
             db_session.add(relevant_user);
             db_session.commit();
-
             user = db_session.query(User).filter(User.id == req['user_id']).first()
             return common.make_response_packet('Relevant ID Removed Successfully', user.toDict(), 200, False, None)
         except Exception as ex:
@@ -436,12 +439,19 @@ class UserAccountsProcessor:
                 return common.make_response_packet('', None, 400, False, 'User_id is required')
             if (not 'user_id' in req):
                 return common.make_response_packet('', None, 400, False, 'User ID is required')
-            shopkeeper = db_session.query(User).filter(User.id == req['user_id']).first()
-            users = db_session.query(User).filter(User.user_type == 'customer').all()
-            if (not users):
-                return common.make_response_packet('No Customers Found', [],
-                                                   400,
-                                                   False, None)
+            is_user_exist = db_session.query(User).filter(User.id == req['user_id']).first()
+            if is_user_exist.user_type == "shopkeeper":
+                users = db_session.query(User).filter(User.user_type == "customer").all()
+                if (not users):
+                    return common.make_response_packet('No Customers Found', [],
+                                                       400,
+                                                       False, None)
+            else:
+                users = db_session.query(User).filter(User.user_type == "shop_keeper").all()
+                if (not users):
+                    return common.make_response_packet('No Shop Keepers Found', [],
+                                                       400,
+                                                       False, None)
             users_list = []
             target = os.path.abspath("static/")
             for user in users:
@@ -449,27 +459,23 @@ class UserAccountsProcessor:
                 user_folder = os.path.join(target, user.user_name)
                 if not os.path.isdir(user_folder):
                     resp['image'] = ''
-                    users_list.append(resp)
-                    continue
-                profile_pic_folder = os.path.join(user_folder, "profile_pic")
-                if not os.path.isdir(profile_pic_folder):
-                    resp['image'] = ''
-                    users_list.append(resp)
-                    continue
                 else:
-                    image = resp["image"] + ".png" if "image" in resp else "";
-                    if not os.path.isfile(os.path.join(profile_pic_folder, image)):
+                    profile_pic_folder = os.path.join(user_folder, "profile_pic")
+                    if not os.path.isdir(profile_pic_folder):
                         resp['image'] = ''
-                        resp["imageb64"] = ''
-                        users_list.append(resp)
-                        continue
                     else:
-                        resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
-                        resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
+                        image = resp["image"] + ".png" if "image" in resp else "";
+                        if not os.path.isfile(os.path.join(profile_pic_folder, image)):
+                            resp['image'] = ''
+                            resp["imageb64"] = ''
+                        else:
+                            resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
+                            resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
+                users_list.append(resp)
             new_list = []
             relevant_ids = []
-            if shopkeeper.relevant_id:
-                relevant_ids = json.loads(shopkeeper.relevant_id)
+            if is_user_exist.relevant_id:
+                relevant_ids = json.loads(is_user_exist.relevant_id)
             for user in users_list:
                 find = False
                 for user_id in relevant_ids:
@@ -480,7 +486,7 @@ class UserAccountsProcessor:
             return common.make_response_packet('Success', new_list, 200,
                                                False, None)
         except Exception as ex:
-            print("Exception in fetching customers list", ex)
+            print("Exception in fetching users list", ex)
             return common.make_response_packet("Server Error", None, 400, False, ex)
         Session.session.destroy_session()
 
