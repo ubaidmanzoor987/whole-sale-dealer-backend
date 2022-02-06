@@ -17,44 +17,58 @@ class OrdersProcessor:
             if not req:
                 return common.make_response_packet('', None, 400, False, 'Invalid Data')
 
-            if not 'product_id' in req:
-                return common.make_response_packet('', None, 400, False, 'Product Id is required')
+            if not 'product' in req:
+                return common.make_response_packet('', None, 400, False, 'Product data is required')
 
             if not 'user_id' in req:
                 return common.make_response_packet('', None, 400, False, 'User id is required')
 
-            if not 'quantities' in req:
-                return common.make_response_packet('', None, 400, False, 'Quantities is required')
-
             user_id = req['user_id']
-            product_id = req['product_id']
-            quantities = req['quantities']
-            total_price = req['total_price']
-
+            product = req['product']
             is_user_exist = db_session.query(User).filter(User.id == user_id).first()
             if not is_user_exist:
                 return common.make_response_packet('', None, 400, False, 'Invalid user id')
             elif is_user_exist and is_user_exist.user_type !='customer':
                 return common.make_response_packet('', None, 400, False, 'You are not customer')
 
-            o = Orders(
-                status="pending",
-                quantities=quantities,
-                total_price=total_price,
-                user_id=user_id,
-                product_id=product_id,
-            )
-            db_session.add(o)
+            orders_data = [];
+            for prod in product:
+                id = prod['id'];
+                quant = prod['quantity'];
+                total_price = prod['total_price'];
+                o = Orders(
+                    status="pending",
+                    quantites=quant,
+                    total_price=total_price,
+                    user_id=user_id,
+                    product_id=id,
+                )
+                p = db_session.query(Products).filter(Products.id == id).first()
+                orders_data.append(o.toDict())
+                if p.quantities > 0:
+                    new_quantity = p.quantities - quant;
+                    p.quantities = new_quantity
+                    db_session.add(p)
+                db_session.add(o)
             db_session.commit()
+            Session.session.destroy_session()
             # send_push_message(is_user_exist.expo_push_token, is_user_exist.user_name + "added new product " + product_name)
-            return common.make_response_packet('Order successfully placed', o.toDict(), 200, True, '')
+            return common.make_response_packet('Order successfully placed', orders_data, 200, True, '')
         except Exception as ex:
             print("Exception in process_insert_order", ex)
             return common.make_response_packet("", None, 400, False, "Server Error")
 
-        Session.session.destroy_session()
 
 ###############################################################################
+    def convert_img_to_b64(self, imagePath):
+        try:
+            import base64
+            with open(imagePath, "rb") as img_file:
+                b64_string = base64.b64encode(img_file.read())
+                return b64_string.decode('utf-8');
+        except Exception as ex:
+            print("Exception in convert img to b64", ex);
+            return "";
 
     def list_orders(self, req):
         try:
@@ -65,12 +79,102 @@ class OrdersProcessor:
             if not is_user_exist:
                 return common.make_response_packet('', None, 400, False, 'Invalid user id')
             orders_data = []
-            orders = db_session.query(Orders).filter(Products.user_id == user_id).all();
-            for p in orders:
-                resp = p.toDict()
-                orders_data.append(resp)
-            return common.make_response_packet('Orders Successfully Retrieved', orders_data, 200, True, '')
-
+            target = os.path.abspath("static/")
+            if is_user_exist.user_type == "customer":
+                orders = db_session.query(Orders).filter(Orders.user_id == user_id).all();
+                for order in orders:
+                    resp = order.toDict()
+                    user_name = order.product_rel.shopkeeper_rel.user_name;
+                    user_folder = os.path.join(target, user_name)
+                    if not os.path.isdir(user_folder):
+                        resp['image1'] = ''
+                        resp['image2'] = ''
+                        resp['image3'] = ''
+                    else:
+                        product_folder = os.path.join(user_folder, "product_pic")
+                        if not os.path.isdir(product_folder):
+                            resp['image1'] = ''
+                            resp['image2'] = ''
+                            resp['image3'] = ''
+                            resp["image1b64"] = ''
+                            resp["image2b64"] = ''
+                            resp["image3b64"] = ''
+                        else:
+                            image1 = resp["image1"] + ".png" if "image1" in resp else "";
+                            image2 = resp["image2"] + ".png" if "image2" in resp else "";
+                            image3 = resp["image3"] + ".png" if "image3" in resp else "";
+                            if not os.path.isfile(os.path.join(product_folder, image1)):
+                                resp['image1'] = ''
+                                resp["image1b64"] = ''
+                            else:
+                                resp[
+                                    'image1'] = "static\\" + user_name + "\\product_pic" + "\\" + image1;
+                                resp["image1b64"] = self.convert_img_to_b64(os.path.join(product_folder, image1))
+                            if not os.path.isfile(os.path.join(product_folder, image2)):
+                                resp['image2'] = ''
+                                resp["image2b64"] = ''
+                            else:
+                                resp[
+                                    'image2'] = "static\\" + user_name + "\\product_pic" + "\\" + image2;
+                                resp["image2b64"] = self.convert_img_to_b64(os.path.join(product_folder, image2))
+                            if not os.path.isfile(os.path.join(product_folder, image3)):
+                                resp['image3'] = ''
+                                resp["image3b64"] = ''
+                            else:
+                                resp[
+                                    'image3'] = "static\\" + user_name + "\\product_pic" + "\\" + image3;
+                                resp["image3b64"] = self.convert_img_to_b64(os.path.join(product_folder, image3))
+                    orders_data.append(resp)
+                return common.make_response_packet('Orders Successfully Retrieved', orders_data, 200, True, '')
+            else:
+                all_orders = db_session.query(Orders).all();
+                for order in all_orders:
+                    resp = order.toDict()
+                    product_rel = order.product_rel;
+                    shop_keeper_id = product_rel.user_id;
+                    if (user_id == shop_keeper_id):
+                        user_name = product_rel.shopkeeper_rel.user_name;
+                        user_folder = os.path.join(target, user_name)
+                        if not os.path.isdir(user_folder):
+                            resp['image1'] = ''
+                            resp['image2'] = ''
+                            resp['image3'] = ''
+                        else:
+                            product_folder = os.path.join(user_folder, "product_pic")
+                            if not os.path.isdir(product_folder):
+                                resp['image1'] = ''
+                                resp['image2'] = ''
+                                resp['image3'] = ''
+                                resp["image1b64"] = ''
+                                resp["image2b64"] = ''
+                                resp["image3b64"] = ''
+                            else:
+                                image1 = resp["image1"] + ".png" if "image1" in resp else "";
+                                image2 = resp["image2"] + ".png" if "image2" in resp else "";
+                                image3 = resp["image3"] + ".png" if "image3" in resp else "";
+                                if not os.path.isfile(os.path.join(product_folder, image1)):
+                                    resp['image1'] = ''
+                                    resp["image1b64"] = ''
+                                else:
+                                    resp[
+                                        'image1'] = "static\\" + user_name + "\\product_pic" + "\\" + image1;
+                                    resp["image1b64"] = self.convert_img_to_b64(os.path.join(product_folder, image1))
+                                if not os.path.isfile(os.path.join(product_folder, image2)):
+                                    resp['image2'] = ''
+                                    resp["image2b64"] = ''
+                                else:
+                                    resp[
+                                        'image2'] = "static\\" + user_name + "\\product_pic" + "\\" + image2;
+                                    resp["image2b64"] = self.convert_img_to_b64(os.path.join(product_folder, image2))
+                                if not os.path.isfile(os.path.join(product_folder, image3)):
+                                    resp['image3'] = ''
+                                    resp["image3b64"] = ''
+                                else:
+                                    resp[
+                                        'image3'] = "static\\" + user_name + "\\product_pic" + "\\" + image3;
+                                    resp["image3b64"] = self.convert_img_to_b64(os.path.join(product_folder, image3))
+                        orders_data.append(resp)
+                return common.make_response_packet('Orders Successfully Retrieved', orders_data, 200, True, '')
         except Exception as ex:
             print("Exception in list_orders", ex)
             return common.make_response_packet("", None, 400, False, "Server Error")
@@ -92,6 +196,7 @@ class OrdersProcessor:
 
             user_id = req['user_id']
             order_id = req['order_id']
+            status = req['status']
             is_user_exist = db_session.query(User).filter(User.id == user_id).first()
             if not is_user_exist:
                 return common.make_response_packet('', None, 400, False, 'Invalid user id')
@@ -101,20 +206,22 @@ class OrdersProcessor:
             pr = db_session.query(Orders).filter(Orders.id == order_id).first()
             if (not pr):
                 return common.make_response_packet('', None, 400, False, 'invalid order id')
-            keys = pr.__table__.columns
-            updated = False
-            for k in keys:
-                updated |= common.check_and_update(pr, req, k.name)
-            if (updated):
-                pr.updated_at = datetime.datetime.now()
-                db_session.commit()
-                return common.make_response_packet('Order successfully updated', pr.toDict(), 200, True, '')
-            else:
-                return common.make_response_packet('Nothing Updated', pr.toDict(), 200, True, '')
+            pr.status = status;
+            pr.updated_at = datetime.datetime.now()
+            db_session.add(pr)
+            db_session.commit()
+            Session.session.destroy_session()
+            return common.make_response_packet('Order successfully updated', pr.toDict(), 200, True, '')
+            # keys = pr.__table__.columns
+            # updated = False
+            # for k in keys:
+            #     updated |= common.check_and_update(pr, req, k.name)
+            # if (updated):
+            # else:
+            #     return common.make_response_packet('Nothing Updated', pr.toDict(), 200, True, '')
         except Exception as ex:
             print("Exception in update_order", ex)
             return common.make_response_packet("", None, 400, False, "Server Error")
-        Session.session.destroy_session()
 
 ###############################################################################
 

@@ -44,16 +44,17 @@ class Orders(Session.session.get_base()):
         }
         if (self.product_rel):
             u["product_name"] = self.product_rel.product_name
-            u["product_image1"] =  self.product_rel.image1
-            u["product_description"] =  self.product_rel.product_description
+            u["image1"] =  self.product_rel.image1
+            u["image2"] =  self.product_rel.image2
+            u["image3"] =  self.product_rel.image3
             if self.product_rel.brand_rel:
                 u["brand_name"] =  self.product_rel.brand_rel.brand_name
             if self.product_rel.shopkeeper_rel:
-                u["product_shopkeeper_owner_name"] = self.product_rel.shopkeeper_rel.owner_name
-                u["product_shopkeeper_shop_name"] = self.product_rel.shopkeeper_rel.shop_name
-                u["product_shopkeeper_address"] = self.product_rel.shopkeeper_rel.address
+                u["shopkeeper_owner_name"] = self.product_rel.shopkeeper_rel.owner_name
+                u["shopkeeper_shop_name"] = self.product_rel.shopkeeper_rel.shop_name
+                u["shopkeeper_address"] = self.product_rel.shopkeeper_rel.address
         if self.user_rel:
-            u["user_owner_name"] = self.user_rel.owner_name
-            u["user_shop_name"] = self.user_rel.shop_name
-            u["user_address"] = self.user_rel.address
+            u["customer_name"] = self.user_rel.owner_name
+            u["customer_shop_name"] = self.user_rel.shop_name
+            u["customer_shop_address"] = self.user_rel.address
         return u

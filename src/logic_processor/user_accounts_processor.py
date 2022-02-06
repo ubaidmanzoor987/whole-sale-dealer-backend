@@ -8,7 +8,6 @@ Session.create_session()
 db_session = Session.session.get_session()
 engine = Session.session.get_engine()
 from src.models.User import User
-from src.models.ExpoPushTokens import ExpoPushTokens
 from src.logic_processor import common
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -422,8 +421,9 @@ class UserAccountsProcessor:
                 all_relevant_user = json.loads(user.relevant_id)
             user_list = []
             for user_id in all_relevant_user:
-                user = db_session.query(User).filter(User.id == user_id).first();
-                user_list.append(user.toDict())
+                new_user = db_session.query(User).filter(User.id == user_id).first();
+                if new_user:
+                    user_list.append(new_user.toDict())
             return common.make_response_packet('Relevant Users are reterived Successfully', user_list, 200, False, None)
         except Exception as ex:
             print("Exception in list_relevent_users", ex)
@@ -440,7 +440,7 @@ class UserAccountsProcessor:
             if (not 'user_id' in req):
                 return common.make_response_packet('', None, 400, False, 'User ID is required')
             is_user_exist = db_session.query(User).filter(User.id == req['user_id']).first()
-            if is_user_exist.user_type == "shopkeeper":
+            if is_user_exist.user_type == "shop_keeper":
                 users = db_session.query(User).filter(User.user_type == "customer").all()
                 if (not users):
                     return common.make_response_packet('No Customers Found', [],
