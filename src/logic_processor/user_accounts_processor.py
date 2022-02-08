@@ -72,18 +72,20 @@ class UserAccountsProcessor:
                 if not os.path.isdir(profile_pic_folder):
                     resp['image'] = ''
                 else:
-                    image = resp["image"] + ".png" if "image" in resp else "";
-                    if not os.path.isfile(os.path.join(profile_pic_folder, image)):
-                        resp['image'] = ''
-                        resp["imageb64"] = ''
-                    else:
-                        resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
-                        resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
-
+                    image = None
+                    if resp["image"]:
+                        image = resp["image"] + ".png" if "image" in resp else "";
+                    if image:
+                        if not os.path.isfile(os.path.join(profile_pic_folder, image)):
+                            resp['image'] = ''
+                            resp["imageb64"] = ''
+                        else:
+                            resp['image'] = "static\\" + user.user_name + "\\profile_pic" + "\\" + image;
+                            resp["imageb64"] = self.convert_img_to_b64(os.path.join(profile_pic_folder, image))
             return common.make_response_packet("Login Successfully", resp, 200, True, None)
         except Exception as ex:
             print("Exception in process_login ", ex)
-            return common.make_response_packet('', None, 400, False, 'Server Error' + ex.Message)
+            return common.make_response_packet('', None, 400, False, 'Server Error' + "Unable to login")
 
     ################################### Login End ###########################################
 
